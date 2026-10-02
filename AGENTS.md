@@ -9,3 +9,5 @@
 - Keep credentials, generated clients, test databases, build output and dependency directories out of Git.
 - Apply meaningful validation before committing: lint, typecheck, unit tests, database integration tests for data changes, production build and process smoke when appropriate.
 - Schema changes include versioned migrations. Do not edit migrations that have already been applied or published.
+
+- Consult the matching Next.js documentation bundled in node_modules/next/dist/docs before changing framework-specific behavior.

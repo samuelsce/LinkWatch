@@ -10,6 +10,7 @@ Esta entrega é M0: preparar uma base executável e verificável. Login e monito
 4. **Worker:** processo separado, heartbeat, tratamento de sinais e testes de ciclo de vida.
 5. **CI:** a verificação que roda automaticamente no GitHub e smoke dos processos.
 6. **Documentação:** instruções atualizadas e este guia.
+7. **Ajuste do ambiente de desenvolvimento:** excluir `next-env.d.ts` gerado do versionamento e impedir que `next dev` reescreva automaticamente o acordo de trabalho em AGENTS.md.
 
 Um commit agrupa uma mudança coerente. Evitamos juntar banco, UI e worker num commit gigante porque isso dificulta revisão, aprendizado e investigação de bugs. Para explorar:
 
@@ -28,6 +29,8 @@ O hash identifica uma versão específica. `git show` só lê o histórico; voc�
 `src/app/api/health/live/route.ts` é uma rota HTTP. Ela devolve JSON e ajuda a verificar se o servidor responde. Não depende do banco.
 
 O TypeScript checa tipos antes de executar; não valida automaticamente dados de formulários ou requisições. Por isso a futura entrada de usuários precisará de validação de runtime, além dos tipos.
+
+`next-env.d.ts` é gerado pelo Next.js e muda entre desenvolvimento e build. Ele fica fora do Git; `next typegen`, `next dev` e `next build` o recriam. Isso evita que simplesmente iniciar a aplicação produza uma alteração pendente no repositório.
 
 ## Banco: schema, client e migration são coisas diferentes
 

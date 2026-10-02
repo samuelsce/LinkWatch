@@ -25,5 +25,6 @@ src/generated/prisma/
 
 # TypeScript incremental state and local tooling
 *.tsbuildinfo
+next-env.d.ts
 .npm-cache/
 .postgres-test/
