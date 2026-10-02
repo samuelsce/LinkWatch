@@ -1,10 +1,12 @@
 import { setTimeout as delay } from "node:timers/promises";
 
-type WorkerEvent = "worker_started" | "worker_heartbeat_failed" | "worker_stopped";
+type WorkerEvent = "worker_started" | "worker_heartbeat_failed" | "worker_tick_failed" | "worker_stopped";
 type LoopDependencies = {
   heartbeat: () => Promise<void>;
   log: (event: WorkerEvent) => void;
   wait?: (signal: AbortSignal) => Promise<void>;
+  tick?: () => Promise<void>;
+  drain?: () => Promise<void>;
 };
 
 async function waitForNextHeartbeat(signal: AbortSignal) {
@@ -15,7 +17,6 @@ async function waitForNextHeartbeat(signal: AbortSignal) {
   }
 }
 
-// M0 runs only a heartbeat. Scheduling and HTTP probes are delivered in M2.
 export async function runWorkerLoop(dependencies: LoopDependencies, signal: AbortSignal) {
   const wait = dependencies.wait ?? waitForNextHeartbeat;
   if (signal.aborted) return;
@@ -24,9 +25,17 @@ export async function runWorkerLoop(dependencies: LoopDependencies, signal: Abor
   await dependencies.heartbeat();
   dependencies.log("worker_started");
 
+  const tick = async () => {
+    if (signal.aborted) return;
+    try { await dependencies.tick?.(); }
+    catch { dependencies.log("worker_tick_failed"); }
+  };
+  await tick();
+
   while (!signal.aborted) {
     await wait(signal);
     if (signal.aborted) break;
+    await tick();
     try {
       await dependencies.heartbeat();
     } catch {
@@ -34,5 +43,6 @@ export async function runWorkerLoop(dependencies: LoopDependencies, signal: Abor
     }
   }
 
+  await dependencies.drain?.();
   dependencies.log("worker_stopped");
 }

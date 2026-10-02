@@ -58,4 +58,16 @@ describe("worker lifecycle", () => {
     await running;
     expect(heartbeat).toHaveBeenCalledTimes(1);
   });
+  it("stops scheduling and waits for active work to drain", async () => {
+    const controller = new AbortController();
+    let finish!: () => void;
+    const drain = vi.fn(() => new Promise<void>((resolve) => { finish = resolve; }));
+    const log = vi.fn();
+    const running = runWorkerLoop({ heartbeat: async () => {}, tick: async () => { controller.abort(); }, drain, log }, controller.signal);
+    for (let attempt = 0; attempt < 10 && !finish; attempt++) await Promise.resolve();
+    expect(drain).toHaveBeenCalledTimes(1);
+    expect(log).not.toHaveBeenCalledWith("worker_stopped");
+    finish(); await running;
+    expect(log).toHaveBeenLastCalledWith("worker_stopped");
+  });
 });

@@ -3,6 +3,7 @@ import { readWorkerId } from "../config/env";
 import { createDatabaseClient } from "../db/client";
 import { writeHeartbeat } from "./heartbeat";
 import { runWorkerLoop } from "./loop";
+import { WorkerRuntime } from "./runtime";
 
 async function main() {
   const workerId = readWorkerId();
@@ -11,15 +12,19 @@ async function main() {
   const stop = () => controller.abort();
   process.once("SIGINT", stop);
   process.once("SIGTERM", stop);
+  const runtime = new WorkerRuntime(database, (event) => console.log(JSON.stringify({ ...event, workerId, time: new Date().toISOString() })));
 
   try {
     await runWorkerLoop({
       heartbeat: () => writeHeartbeat(database, workerId),
-      log: (event) => console.log(JSON.stringify({ event, workerId, mode: "heartbeat_only", time: new Date().toISOString() })),
+      tick: () => runtime.tick(),
+      drain: () => runtime.drain(),
+      log: (event) => console.log(JSON.stringify({ event, workerId, time: new Date().toISOString() })),
     }, controller.signal);
   } finally {
     process.removeListener("SIGINT", stop);
     process.removeListener("SIGTERM", stop);
+    await runtime.drain();
     await database.$disconnect();
   }
 }
