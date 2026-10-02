@@ -28,6 +28,13 @@ function createMonitor(ownerId = ownerA) {
 }
 
 describe("PostgreSQL invariants", () => {
+  it("returns timestamps without shifting the database timezone", async () => {
+    const [row] = await database.$queryRaw<Array<{ stamp: Date; epoch: number }>>`
+      SELECT CURRENT_TIMESTAMP AS stamp,
+        (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::double precision AS epoch
+    `;
+    expect(Math.abs(row!.stamp.getTime() - row!.epoch)).toBeLessThan(1);
+  });
   it("creates a monitor with explicit default configuration", async () => {
     const monitor = await createMonitor();
     expect(monitor).toMatchObject({ intervalSeconds: 300, timeoutMs: 10000, expectedStatus: 200, status: "UNKNOWN", enabled: true });
