@@ -1,7 +1,7 @@
 import { z } from "zod";
 import ipaddr from "ipaddr.js";
 
-function publicHttpUrl(value: string): boolean {
+export function publicHttpUrl(value: string): boolean {
   if (/[\u0000-\u001f\u007f]/.test(value)) return false;
   try {
     const url = new URL(value);
