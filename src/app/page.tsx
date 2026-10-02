@@ -33,7 +33,7 @@ export default function Home() {
             ))}
           </div>
         </section>
-        <p className="mt-8 text-sm leading-relaxed text-slate-400">Login e cadastro disponíveis em ambientes configurados. Monitoramento automático e página pública de status estão em desenvolvimento.</p>
+        <p className="mt-8 text-sm leading-relaxed text-slate-400">Login, cadastro e monitoramento automático disponíveis em ambientes configurados, com o worker ativo. Gráficos e página pública de status estão em desenvolvimento.</p>
       </main>
       <footer className="border-t border-slate-800 py-6 text-sm text-slate-400">LinkWatch · Construído por Samuel · Next.js + TypeScript</footer>
     </div>

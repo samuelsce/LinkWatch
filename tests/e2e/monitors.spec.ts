@@ -133,3 +133,24 @@ test("rejects a server action submitted with an untrusted Origin", async ({ page
   expect((await response).status()).toBe(500);
   expect((await pool.query('SELECT id FROM "Monitor" WHERE "ownerId" = $1', [user.id])).rowCount).toBe(0);
 });
+
+test("shows real stored observations, incident recovery and history windows on mobile", async ({ page, context }) => {
+  const user = await session(context, "History test");
+  const id = randomUUID();
+  const now = new Date();
+  await pool.query('INSERT INTO "Monitor" (id, "ownerId", name, url, status, "lastCompletedAt", "updatedAt") VALUES ($1,$2,$3,$4,\'ONLINE\',$5,$5)', [id, user.id, "Observed service", "https://example.com/health", now]);
+  for (const [index, outcome] of ["FAILURE", "FAILURE", "SUCCESS"].entries()) {
+    const time = new Date(now.getTime() - (3 - index) * 1000);
+    await pool.query('INSERT INTO "CheckRun" (id,"monitorId","scheduledAt",revision,"startedAt","completedAt",state,outcome,"latencyMs") VALUES ($1,$2,$3,1,$3,$3,\'COMPLETED\',$4,$5)', [randomUUID(), id, time, outcome, outcome === "SUCCESS" ? 82 : null]);
+  }
+  await pool.query('INSERT INTO "Incident" (id,"monitorId","startedAt","confirmedAt","endedAt","endReason","failureCode") VALUES ($1,$2,$3,$4,$5,\'RECOVERED\',\'HTTP_STATUS\')', [randomUUID(), id, new Date(now.getTime() - 3000), new Date(now.getTime() - 2000), now]);
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto(`/monitors/${id}`);
+  await expect(page.getByText("33,33%", { exact: true })).toBeVisible();
+  await expect(page.getByText("Recuperado", { exact: true })).toBeVisible();
+  await expect(page.getByRole("table")).toContainText("82 ms");
+  await page.getByRole("link", { name: "7 dias", exact: true }).click();
+  await expect(page).toHaveURL(/hours=168$/);
+  await expect(page.getByRole("link", { name: "7 dias", exact: true })).toHaveAttribute("aria-current", "page");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
