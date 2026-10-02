@@ -1,6 +1,6 @@
 # Arquitetura proposta
 
-Estado: M0 e implementação de M1 disponíveis. Auth.js/GitHub, sessão de banco, rotas privadas e gestão de monitores estão implementados; o OAuth real depende da configuração local e smoke manual. Agendamento e checks abaixo são o plano de M2; worker ainda executa apenas heartbeat.
+Estado: M0–M2 implementados. Worker, probe seguro, scheduler com leases, histórico, incidentes e retenção estão disponíveis. OAuth real depende de configuração e smoke manual. Gráficos, publicação, deploy e teste de carga ainda são planejamento.
 
 ## Estrutura
 
@@ -65,11 +65,11 @@ Referência: [OWASP SSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.
 
 ## Retenção e capacidade
 
-Limpeza diária em lotes de checks concluídos há mais de 30 dias; preservar execuções ativas. A tarefa usa uma lease global no banco para não duplicar entre workers. Começar sem particionamento e medir consulta, armazenamento e limpeza.
+Limpeza diária em até dez lotes de mil checks concluídos há mais de 30 dias; preservar execuções ativas. Uma lease global evita duplicação. Se todos os lotes ficam cheios, retomar em uma hora; após crash, a lease expira em cinco minutos. Incidentes não são removidos pela retenção. Começar sem particionamento e medir consulta, armazenamento e limpeza.
 
 100 monitores a cada minuto geram aproximadamente 4,32 milhões de checks em 30 dias. Isso é um teto de projeto para validação, não uma promessa de operação gratuita. Começar a demo com poucos monitores e intervalo padrão de cinco minutos.
 
-Métricas são calculadas no servidor. Agregar gráficos em buckets (5 minutos em 24 h, 1 hora em 7 d, 6 horas em 30 d), informando média, amostras e falhas. Calcular p95 do período a partir dos checks, não pela média de percentis dos buckets.
+Métricas são calculadas no servidor com filtros UTC, contagem de resultados de endpoint, média e percentile_disc(0.95) para nearest-rank. Lacunas usam observações da revisão atual; atrasos de início maiores que 30 s e resultados operacionais são informados separadamente. M3 agregará gráficos em buckets (5 minutos em 24 h, 1 hora em 7 d, 6 horas em 30 d), informando média, amostras e falhas. Não calcular p95 pela média de percentis de buckets.
 
 ## Operação e deploy
 

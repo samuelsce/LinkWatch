@@ -1,6 +1,16 @@
 # Estratégia de testes e release
 
-M1 inclui 47 testes unitários, 17 de integração PostgreSQL e 7 jornadas de navegador, além de smoke de web/worker. Executar `npm test`, `npm run test:integration`, `npm run test:e2e` e `npm run test:smoke` conforme o README. CI está em `.github/workflows/ci.yml`. Sessões E2E usam o banco normal, sem bypass no app. OAuth real requer smoke manual após configuração. Cenários de coleta, incidentes e página pública abaixo são o plano para M2–M4.
+M2 inclui 78 testes unitários, 38 de integração PostgreSQL/rede e 8 jornadas de navegador, além de smoke de web/worker. Executar `npm test`, `npm run test:integration`, `npm run test:e2e` e `npm run test:smoke` conforme o README. CI está em `.github/workflows/ci.yml`. Sessões E2E usam o banco normal, sem bypass no app. OAuth real requer smoke manual após configuração. Publicação, E2E com worker+navegador, capacidade e restore abaixo continuam planejados para M3–M4.
+
+## Evidências de M2
+
+- Servidor HTTP isolado: headers sem corpo finalizado, timeout, Host preservado e redirect sem seguir destino; HTTPS com certificado autoassinado é rejeitado.
+- DNS misto é bloqueado; o transporte recebe somente o IP validado. Resolver/transport de fixtures são injetados somente pelo código dos testes, sem flag de produção para permitir localhost.
+- Dois schedulers competem pelo mesmo ciclo; lease expirada troca token sem trocar runId; conclusão antiga, duplicada, após expiração, pausa, edição ou exclusão é rejeitada.
+- Ciclo HTTP real pelo WorkerRuntime: online → instável → offline → recuperado, com um incidente. Teste adicional verifica cinco slots e a sexta tarefa sem reserva antecipada.
+- Falha de persistência reverte a transação inteira. Coleta preserva updatedAt da configuração para não invalidar formulário apenas pela atividade do worker.
+- Disponibilidade vazia é null; p95 de 1–20 é 19; janelas UTC e lacunas são verificadas; dois cleaners não duplicam remoção, preservando execuções ativas e incidentes.
+- Browser mostra métricas/recuperação e filtros no mobile a partir de registros de fixture. Não confundir essa jornada com a autorização GitHub real ou com E2E orquestrando worker.
 
 ## Regras de domínio — testes unitários
 

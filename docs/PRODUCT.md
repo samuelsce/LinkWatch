@@ -1,6 +1,6 @@
 # LinkWatch — requisitos do produto
 
-Estado: M0 e implementação de M1 disponíveis. Login GitHub requer configurar OAuth App e executar o smoke real; cadastro/gestão e isolamento foram validados com sessões de banco. Checks HTTP, gráficos e status público continuam previstos para M2–M3.
+Estado: M0–M2 implementados. Worker coleta HTTP seguro, persiste histórico e incidentes; detalhe mostra métricas e amostras reais. Login GitHub requer configurar OAuth App e executar o smoke real. Gráficos e status público continuam previstos para M3; capacidade e deploy ainda precisam de validação.
 
 ## Objetivo
 
@@ -52,6 +52,7 @@ Desenvolvedor com alguns sites ou APIs públicas. Entra com GitHub, cadastra um 
 - Redirecionamentos não são seguidos no MVP. Um 3xx pode ser explicitamente o status esperado, mas o destino não é verificado.
 - Cada ciclo gera no máximo um resultado persistido por monitor e horário agendado.
 - Erros do worker e bloqueios por política de URL são estados operacionais separados de falhas do endpoint.
+- Resultado operacional não atualiza o frescor do endpoint, não resolve incidentes e interrompe a sequência de falhas consecutivas.
 - Uma revisão antiga ou um worker sem lease válida não pode alterar o estado atual.
 
 ### R04 — estado e incidentes

@@ -2,7 +2,7 @@
 
 An uptime monitoring tool for websites and HTTP APIs. Register an endpoint, track availability and latency, investigate incidents, and share a public status page.
 
-**Project status:** M1 access and monitor management implemented. GitHub OAuth integration, database-backed sessions, private dashboard, and monitor CRUD are available in configured environments. The real GitHub authorization round trip still requires a local OAuth App and a manual smoke test. Endpoint checks, charts, incident detection, alerts, and public status pages remain planned. There is no production deployment yet.
+**Project status:** M2 monitoring implemented. The standalone worker performs safe HTTP checks, stores history, and detects/resolves incidents. The private monitor page shows observed availability, average/p95 latency, and recent checks. GitHub OAuth integration and CRUD are available in configured environments; the real OAuth round trip still needs a local OAuth App and manual smoke. Charts, alerts, public status pages, and production deployment remain planned.
 
 ## Available now
 
@@ -11,7 +11,11 @@ An uptime monitoring tool for websites and HTTP APIs. Register an endpoint, trac
 - Create, list, edit, pause, resume, and delete monitors with server-side validation.
 - Owner isolation, configurable per-user limits, and conflict detection for stale forms.
 - Prisma 7 schema and versioned PostgreSQL migrations, including domain constraints.
-- Separate worker process with database heartbeat and graceful shutdown.
+- Standalone worker with five concurrent probes, database leases, crash recovery and graceful shutdown.
+- DNS validation and IP pinning, verified TLS, total deadlines, no redirects or response-body downloads.
+- Transactional incident detection after two consecutive failures and recovery after success.
+- Private history with 24-hour/7-day/30-day windows, observed availability and successful-check latency metrics.
+- Bounded retention of completed checks older than 30 days; incidents remain until monitor deletion.
 - Web liveness (`/api/health/live`) and database readiness (`/api/health/ready`).
 - Unit tests, PostgreSQL integration, browser journeys with database sessions, and process smoke.
 - GitHub Actions for schema, lint, types, tests, build, browser journeys, smoke, and audit.
@@ -35,7 +39,7 @@ Email and Discord alerts follow the core monitoring release. Multi-region probes
 | Layer | Choice | Purpose |
 | --- | --- | --- |
 | Web | Next.js 16 + React 19 + TypeScript | Private dashboard and monitor management |
-| Worker | Node.js 24 + TypeScript + tsx | Heartbeat now; scheduler and HTTP checks in M2 |
+| Worker | Node.js 24 + TypeScript + tsx | Scheduler, safe HTTP probes, incidents and retention |
 | Data | PostgreSQL + Prisma 7 + pg adapter | Versioned schema, checks, incidents, and leases |
 | Authentication | Auth.js v5 beta + Prisma adapter + GitHub OAuth | Database sessions; pinned v5 integration per official App Router guide |
 | UI | Tailwind CSS 4 | Responsive Portuguese interface |
@@ -54,6 +58,7 @@ Exact dependency versions are pinned in `package.json` and `package-lock.json`. 
 - [Architecture decision](docs/adr/0001-separate-monitoring-worker.md) — why monitoring runs separately.
 - [Learning guide (Portuguese)](docs/LEARNING.md) — how the foundation works and what each commit adds.
 - [M1 learning guide (Portuguese)](docs/LEARNING_M1.md) — authentication, authorization, mutations, and tests.
+- [M2 learning guide (Portuguese)](docs/LEARNING_M2.md) — DNS pinning, leases, fencing, incident transitions, metrics and retention.
 - [GitHub OAuth setup (Portuguese)](docs/OAUTH_SETUP.md) — create the local OAuth App and configure credentials.
 
 The interface and planning documents use Portuguese; this README uses English for portfolio reach.
@@ -94,7 +99,11 @@ In a second terminal:
 npm run worker:dev
 ```
 
-The worker writes a heartbeat every five seconds. **It does not check endpoints yet.** Use a distinct `WORKER_ID` for each process. `worker:start` runs without watch mode and currently requires the development dependencies (tsx and Prisma CLI); production packaging belongs to M4.
+The worker polls due monitors every five seconds, reserves only free slots (maximum five per worker), and performs GET probes independently of browser visits. After completion it schedules the next check from the database time plus the configured interval. It records a database heartbeat each loop. Use a distinct `WORKER_ID` for each process. `worker:start` runs without watch mode and currently requires development dependencies (tsx and Prisma CLI); production packaging belongs to M4.
+
+To try monitoring, apply all migrations, start both web and worker, sign in and create a public endpoint monitor. Open its detail page and refresh to see checks and incidents. Expected HTTP status defaults to 200; redirects are not followed. No headers, cookies, authentication credentials or request bodies are supported. Do not disable TLS validation or URL safety to monitor internal services.
+
+Shutdown stops reservations, allows active work up to 20 seconds before aborting its probes, and waits for persistence. Lost leases can trigger another HTTP request after a crash; fencing prevents two completions for one scheduled cycle. This is not an exactly-once external request guarantee.
 
 `db:deploy` applies committed migrations; `db:migrate` creates migrations when changing the schema during development. Commit the schema and its migration together. Do not edit an already applied migration.
 
@@ -138,7 +147,9 @@ npm run test:e2e
 
 Keep TEST_DATABASE_URL set as above. Browser fixtures create ordinary database sessions; the application has no test login route or authentication bypass. OAuth initiation is intercepted before leaving the test browser; the real GitHub callback needs manual verification after credentials are configured.
 
-M1 validation covers 47 unit tests, 17 PostgreSQL integration tests and 7 browser journeys, plus production build/process smoke and a database outage (ready 503, live 200). Local browser tests use installed Edge; CI uses Chromium and PostgreSQL 17. Consult [GitHub Actions](https://github.com/samuelsce/LinkWatch/actions) for the remote result.
+M2 validation covers 78 unit tests, 38 PostgreSQL/network integration tests and 8 browser journeys, plus production build/process smoke and a database outage (ready 503, live 200). Integration includes real isolated HTTP/TLS fixtures and a full HTTP outage/recovery cycle through the worker runtime. Browser history tests display stored fixtures; full worker/browser orchestration follows in M3. Local browser tests use installed Edge; CI uses Chromium and PostgreSQL 17. Consult [GitHub Actions](https://github.com/samuelsce/LinkWatch/actions) for the remote result.
+
+Availability is successful endpoint checks / completed endpoint checks, not time-based uptime or an SLA. Operational errors and periods without checks are excluded, and missing observations are reported separately. Mean and nearest-rank p95 use successful samples only. Metrics cover the full selected window; tables show at most 50 checks and 20 incidents. Checks expire after 30 days; incidents remain. The 100-monitor capacity and scheduling-delay target still need load testing before deployment.
 
 Dependency notes: `@eslint/compat` adapts the Next.js ESLint plugins to ESLint 10 while their peer ranges still refer to older majors. npm may print peer warnings; lint and clean installation are verified. Overrides pin patched `deepmerge-ts` and `mysql2` dependencies used by the Prisma CLI. Reassess these when upgrading Prisma or the lint plugins.
 

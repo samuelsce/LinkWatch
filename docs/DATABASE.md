@@ -1,6 +1,6 @@
 # Modelo de dados
 
-O modelo do MVP está implementado em `prisma/schema.prisma`, com migration inicial e uma segunda migration de restrições PostgreSQL. IDs UUID; horários timestamptz em UTC. Schema validado e migrations aplicadas em banco vazio durante a entrega M0. As integrações de autenticação e monitoramento ainda pertencem às próximas entregas.
+O modelo do MVP está implementado em `prisma/schema.prisma`, com três migrations: tabelas iniciais, restrições PostgreSQL e exclusividade de ciclo ativo. IDs UUID; horários timestamptz em UTC. Todas foram aplicadas em banco vazio. Autenticação e monitoramento estão integrados; publicação e alertas seguem para as próximas entregas.
 
 ```mermaid
 erDiagram
@@ -39,6 +39,7 @@ No schema de autenticação, seguir o adapter escolhido; não inventar um modelo
 - Monitor: CHECK intervalSeconds IN (60, 300, 900), timeoutMs BETWEEN 2000 AND 15000, expectedStatus BETWEEN 200 AND 599, consecutiveFailures >= 0.
 - Monitor: índice ownerId/createdAt e índice parcial nextCheckAt para enabled = true.
 - CheckRun: UNIQUE (monitorId, scheduledAt); índice (monitorId, completedAt DESC), índice completedAt para retenção e state/lease para recuperação.
+- M2 adiciona migration com índice único parcial por monitor enquanto state <> COMPLETED. Recuperação reutiliza a mesma execução e troca seu token; não cria um segundo ciclo ativo.
 - CheckRun: completedAt e outcome obrigatórios quando state = COMPLETED. latencyMs não negativo se preenchido; erro interno não pode ser SUCCESS/FAILURE.
 - Incident: índice (monitorId, startedAt DESC); índice único parcial monitorId WHERE endedAt IS NULL. endedAt >= startedAt e endReason obrigatório em incidentes encerrados.
 - StatusPage: UNIQUE ownerId e UNIQUE slug.
