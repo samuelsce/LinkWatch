@@ -1,6 +1,6 @@
 # Estratégia de testes e release
 
-Plano de verificação, ainda sem testes executáveis. CI será criada quando houver aplicação e lockfile; não publicar um badge verde para etapas não verificadas.
+M0 inclui 16 testes unitários e 8 testes de integração PostgreSQL, além de smoke de web/worker em produção. Executar `npm test`, `npm run test:integration` e `npm run test:smoke` conforme o README. CI está definida em `.github/workflows/ci.yml`. Os cenários de domínio e E2E abaixo continuam como plano para M1–M4; não foram implementados ainda.
 
 ## Regras de domínio — testes unitários
 

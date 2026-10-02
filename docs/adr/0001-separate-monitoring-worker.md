@@ -1,6 +1,6 @@
 # ADR 0001 — separar o worker de monitoramento da aplicação web
 
-Status: proposta para implementação inicial. Data: 2026-10-02.
+Status: aceita; processo separado e heartbeat implementados em M0, scheduler previsto para M2. Data: 2026-10-02.
 
 ## Contexto
 

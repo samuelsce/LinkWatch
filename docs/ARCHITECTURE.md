@@ -1,6 +1,6 @@
 # Arquitetura proposta
 
-Estado: projeto técnico, ainda sem implementação.
+Estado: fundação M0 implementada. Web, schema/migrations, conexão PostgreSQL, readiness e worker com heartbeat estão disponíveis. Os fluxos de agendamento, autenticação e monitoramento abaixo descrevem as próximas entregas.
 
 ## Estrutura
 

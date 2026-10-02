@@ -1,6 +1,6 @@
 # LinkWatch — requisitos do produto
 
-Estado: proposta inicial, 2 de outubro de 2026. Nenhuma funcionalidade está implementada.
+Estado: requisitos definidos em 2 de outubro de 2026; fundação M0 implementada. Login, cadastro, checks HTTP e demais funcionalidades de produto ainda não estão disponíveis.
 
 ## Objetivo
 
