@@ -55,6 +55,10 @@ jobs:
         run: npm run test:integration
       - name: Production build without database credentials
         run: npm run build
+      - name: Install Chromium for browser tests
+        run: npm exec -- playwright install --with-deps chromium
+      - name: Browser journeys and tenant isolation
+        run: npm run test:e2e
       - name: Production web and worker smoke test
         run: npm run test:smoke
       - name: Dependency audit
