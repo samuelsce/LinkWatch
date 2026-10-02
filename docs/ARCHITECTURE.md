@@ -1,6 +1,6 @@
 # Arquitetura proposta
 
-Estado: fundação M0 implementada. Web, schema/migrations, conexão PostgreSQL, readiness e worker com heartbeat estão disponíveis. Os fluxos de agendamento, autenticação e monitoramento abaixo descrevem as próximas entregas.
+Estado: M0 e implementação de M1 disponíveis. Auth.js/GitHub, sessão de banco, rotas privadas e gestão de monitores estão implementados; o OAuth real depende da configuração local e smoke manual. Agendamento e checks abaixo são o plano de M2; worker ainda executa apenas heartbeat.
 
 ## Estrutura
 
@@ -51,7 +51,7 @@ Erro interno do coletor grava resultado operacional, sem contaminar disponibilid
 
 ## Autenticação e isolamento
 
-Proposta: Auth.js com GitHub OAuth e adapter Prisma. Confirmar versões compatíveis e o modelo do adapter no scaffold. Proteger dados no servidor, mesmo quando o layout já exige login. Consultas privadas sempre recebem ownerId da sessão, nunca de um campo enviado pelo cliente.
+Implementação M1: Auth.js v5 beta fixado, GitHub OAuth, adapter Prisma e sessões de banco. O adapter foi testado com o schema atual. Layout, páginas e actions exigem sessão; serviços verificam ownerId derivado dela. Criar usa lock do proprietário para impor limites; editar/pausar/excluir usam lock do monitor e updatedAt para detectar conflito. Cache da sessão é limitado à requisição. Consultas de usuário não são cacheadas globalmente.
 
 Status público usa uma consulta/projeção própria com allowlist de campos. Não serializar modelos completos. Mutations validam entrada, propriedade, origem/CSRF conforme o mecanismo escolhido e limites por usuário.
 

@@ -33,6 +33,8 @@ Nome: LinkWatch — Product & Engineering. Colunas: Backlog, Ready, In progress,
 
 Status da entrega M0: LW-01, LW-02 e LW-03 implementadas. Schema, migrations, web, worker com heartbeat e CI estão versionados; README e guia de aprendizado documentam o ambiente. A validação local passou; o resultado remoto de CI é consultado em GitHub Actions. Os IDs continuam sendo de planejamento; não equivalem a issues criadas.
 
+Status M1: implementação de LW-04/LW-05 disponível, com sessões, CRUD, limites e isolamento validados em PostgreSQL e navegador. O smoke OAuth real permanece pendente da criação/configuração da OAuth App local. Próxima implementação: LW-06, LW-07 e LW-08, construindo o ciclo de monitoramento e incidentes.
+
 Começar por LW-01 a LW-03. Depois acesso/cadastro; em seguida um ciclo vertical com probe + scheduler + incidente. Só então gráficos, publicação e deploy. Alertas dependem de incidentes confiáveis.
 
 ## Corpo sugerido das issues

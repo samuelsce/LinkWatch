@@ -1,6 +1,6 @@
 # Estratégia de testes e release
 
-M0 inclui 16 testes unitários e 8 testes de integração PostgreSQL, além de smoke de web/worker em produção. Executar `npm test`, `npm run test:integration` e `npm run test:smoke` conforme o README. CI está definida em `.github/workflows/ci.yml`. Os cenários de domínio e E2E abaixo continuam como plano para M1–M4; não foram implementados ainda.
+M1 inclui 47 testes unitários, 17 de integração PostgreSQL e 7 jornadas de navegador, além de smoke de web/worker. Executar `npm test`, `npm run test:integration`, `npm run test:e2e` e `npm run test:smoke` conforme o README. CI está em `.github/workflows/ci.yml`. Sessões E2E usam o banco normal, sem bypass no app. OAuth real requer smoke manual após configuração. Cenários de coleta, incidentes e página pública abaixo são o plano para M2–M4.
 
 ## Regras de domínio — testes unitários
 

@@ -1,6 +1,6 @@
 # LinkWatch — requisitos do produto
 
-Estado: requisitos definidos em 2 de outubro de 2026; fundação M0 implementada. Login, cadastro, checks HTTP e demais funcionalidades de produto ainda não estão disponíveis.
+Estado: M0 e implementação de M1 disponíveis. Login GitHub requer configurar OAuth App e executar o smoke real; cadastro/gestão e isolamento foram validados com sessões de banco. Checks HTTP, gráficos e status público continuam previstos para M2–M3.
 
 ## Objetivo
 
@@ -27,7 +27,7 @@ Desenvolvedor com alguns sites ou APIs públicas. Entra com GitHub, cadastra um 
 
 ### R01 — autenticação e propriedade
 
-- Login via GitHub OAuth; proposta de Auth.js a validar no scaffold.
+- Login via GitHub OAuth com Auth.js e sessões no banco; configuração conforme docs/OAUTH_SETUP.md.
 - Cada monitor, incidente e página de status pertence a um usuário.
 - Toda leitura e mutação privada verifica sessão e propriedade no servidor.
 - Sair invalida a sessão; erros de login têm uma mensagem útil.
@@ -39,7 +39,7 @@ Desenvolvedor com alguns sites ou APIs públicas. Entra com GitHub, cadastra um 
 - Campos: nome de 1–80 caracteres, URL até 2.048 caracteres, intervalo de 1/5/15 minutos, timeout de 2–15 segundos e código HTTP esperado de 200–599 (padrão 200).
 - Método GET, portas 80/443, HTTP ou HTTPS. Sem cookies, credenciais na URL, headers personalizados ou corpos de requisição no MVP.
 - Até 10 monitores por usuário no MVP; limite configurável no servidor.
-- Nome e status esperado podem ser editados. Mudar URL, intervalo ou timeout inicia uma nova revisão de configuração.
+- Nome pode ser editado sem nova revisão de coleta. Mudar URL, intervalo, timeout ou status esperado inicia uma nova revisão de configuração.
 - A revisão é salva em cada verificação para o histórico manter o significado original.
 - Pausar cancela verificações futuras. Retomar agenda uma verificação imediata e zera a sequência de falhas.
 - Um monitor novo mostra “Aguardando primeira verificação”.

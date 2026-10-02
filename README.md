@@ -2,16 +2,19 @@
 
 An uptime monitoring tool for websites and HTTP APIs. Register an endpoint, track availability and latency, investigate incidents, and share a public status page.
 
-**Project status:** M0 engineering foundation implemented. The web app, PostgreSQL schema, standalone worker heartbeat, and CI are in place. Authentication, endpoint monitoring, charts, incidents, alerts, and public status pages are still planned. There is no production deployment yet.
+**Project status:** M1 access and monitor management implemented. GitHub OAuth integration, database-backed sessions, private dashboard, and monitor CRUD are available in configured environments. The real GitHub authorization round trip still requires a local OAuth App and a manual smoke test. Endpoint checks, charts, incident detection, alerts, and public status pages remain planned. There is no production deployment yet.
 
 ## Available now
 
 - A responsive Portuguese landing page, explicitly marked as in development.
+- GitHub sign-in, session invalidation on logout, and private routes.
+- Create, list, edit, pause, resume, and delete monitors with server-side validation.
+- Owner isolation, configurable per-user limits, and conflict detection for stale forms.
 - Prisma 7 schema and versioned PostgreSQL migrations, including domain constraints.
 - Separate worker process with database heartbeat and graceful shutdown.
 - Web liveness (`/api/health/live`) and database readiness (`/api/health/ready`).
-- Unit tests, real PostgreSQL integration tests, and a production web/worker smoke test.
-- GitHub Actions for install, schema validation, lint, types, tests, build, smoke, and dependency audit.
+- Unit tests, PostgreSQL integration, browser journeys with database sessions, and process smoke.
+- GitHub Actions for schema, lint, types, tests, build, browser journeys, smoke, and audit.
 
 ## Why this project
 
@@ -31,12 +34,12 @@ Email and Discord alerts follow the core monitoring release. Multi-region probes
 
 | Layer | Choice | Purpose |
 | --- | --- | --- |
-| Web | Next.js 16 + React 19 + TypeScript | App Router foundation; dashboard follows in M1–M3 |
+| Web | Next.js 16 + React 19 + TypeScript | Private dashboard and monitor management |
 | Worker | Node.js 24 + TypeScript + tsx | Heartbeat now; scheduler and HTTP checks in M2 |
 | Data | PostgreSQL + Prisma 7 + pg adapter | Versioned schema, checks, incidents, and leases |
-| Authentication | Planned: Auth.js with GitHub OAuth | Adapter-compatible tables reserved; login in M1 |
+| Authentication | Auth.js v5 beta + Prisma adapter + GitHub OAuth | Database sessions; pinned v5 integration per official App Router guide |
 | UI | Tailwind CSS 4 | Responsive Portuguese interface |
-| Verification | Vitest 5 + PostgreSQL integration + process smoke tests | Playwright user journeys follow once login/monitoring exist |
+| Verification | Vitest 5 + PostgreSQL + Playwright + process smoke | Ownership, concurrent writes, CRUD, logout and Origin checks |
 
 Exact dependency versions are pinned in `package.json` and `package-lock.json`. Hosting will be selected after checking worker support and budget; the MVP cannot rely on once-daily cron.
 
@@ -50,6 +53,8 @@ Exact dependency versions are pinned in `package.json` and `package-lock.json`. 
 - [Test strategy](docs/TESTING.md) — verification and release gates.
 - [Architecture decision](docs/adr/0001-separate-monitoring-worker.md) — why monitoring runs separately.
 - [Learning guide (Portuguese)](docs/LEARNING.md) — how the foundation works and what each commit adds.
+- [M1 learning guide (Portuguese)](docs/LEARNING_M1.md) — authentication, authorization, mutations, and tests.
+- [GitHub OAuth setup (Portuguese)](docs/OAUTH_SETUP.md) — create the local OAuth App and configure credentials.
 
 The interface and planning documents use Portuguese; this README uses English for portfolio reach.
 
@@ -65,13 +70,13 @@ cd LinkWatch
 npm ci
 ```
 
-Copy `.env.example` to `.env` and set `DATABASE_URL`. On PowerShell:
+Prepare `.env` and generate a session secret without printing it:
 
-```powershell
-Copy-Item .env.example .env
+```bash
+node scripts/setup-local-env.mjs
 ```
 
-On macOS/Linux: `cp .env.example .env`.
+Set `DATABASE_URL` and the GitHub OAuth credentials in `.env`, following the [OAuth setup guide](docs/OAUTH_SETUP.md). Existing environment values are preserved by the setup script. Use `http://localhost:3000` consistently for OAuth; do not alternate with `127.0.0.1`.
 
 With Docker installed, start the local database:
 
@@ -122,7 +127,18 @@ npm run test:smoke
 
 macOS/Linux: set the same URL with `export TEST_DATABASE_URL=...` before running the commands. Integration tests apply migrations to that test database and clean only their own fixtures. The smoke script starts and stops a production web process and worker.
 
-M0 validation: clean dependency installation; lint, types, production build; 16 unit tests and 8 integration tests on a temporary PostgreSQL 18 instance; process smoke checks; simulated database outage (ready 503, live 200). CI uses PostgreSQL 17; consult [GitHub Actions](https://github.com/samuelsce/LinkWatch/actions) for its remote result.
+Browser tests run against the production build and a dedicated test database:
+
+```bash
+npm exec -- playwright install chromium
+npm run test:integration
+npm run build
+npm run test:e2e
+```
+
+Keep TEST_DATABASE_URL set as above. Browser fixtures create ordinary database sessions; the application has no test login route or authentication bypass. OAuth initiation is intercepted before leaving the test browser; the real GitHub callback needs manual verification after credentials are configured.
+
+M1 validation covers 47 unit tests, 17 PostgreSQL integration tests and 7 browser journeys, plus production build/process smoke and a database outage (ready 503, live 200). Local browser tests use installed Edge; CI uses Chromium and PostgreSQL 17. Consult [GitHub Actions](https://github.com/samuelsce/LinkWatch/actions) for the remote result.
 
 Dependency notes: `@eslint/compat` adapts the Next.js ESLint plugins to ESLint 10 while their peer ranges still refer to older majors. npm may print peer warnings; lint and clean installation are verified. Overrides pin patched `deepmerge-ts` and `mysql2` dependencies used by the Prisma CLI. Reassess these when upgrading Prisma or the lint plugins.
 
