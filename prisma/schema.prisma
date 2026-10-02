@@ -136,6 +136,7 @@ model CheckRun {
   @@index([monitorId, completedAt(sort: Desc)])
   @@index([completedAt])
   @@index([state, leaseUntil])
+  // SQL also permits at most one unfinished cycle per monitor.
 }
 
 model Incident {
