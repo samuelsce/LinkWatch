@@ -1,6 +1,6 @@
 # Modelo de dados
 
-Modelo lógico proposto. Não é uma migration nem um schema Prisma validado. IDs UUID; horários timestamptz em UTC. Restrições PostgreSQL que o Prisma não representar serão criadas em migrations SQL.
+O modelo do MVP está implementado em `prisma/schema.prisma`, com migration inicial e uma segunda migration de restrições PostgreSQL. IDs UUID; horários timestamptz em UTC. Schema validado e migrations aplicadas em banco vazio durante a entrega M0. As integrações de autenticação e monitoramento ainda pertencem às próximas entregas.
 
 ```mermaid
 erDiagram
@@ -44,7 +44,7 @@ No schema de autenticação, seguir o adapter escolhido; não inventar um modelo
 - StatusPage: UNIQUE ownerId e UNIQUE slug.
 - StatusPageMonitor: chave composta (statusPageId, monitorId); posição não negativa.
 - Todas as FKs de histórico e publicação fazem cascade ao excluir monitor. Exclusão de usuário remove dados próprios conforme fluxo futuro de conta.
-- A propriedade da seleção pública deve ser garantida por transação no serviço e testada; avaliar FKs compostas com ownerId na migration para defesa adicional.
+- A seleção pública usa FKs compostas com ownerId: o banco rejeita associações entre donos diferentes. A aplicação também deverá validar propriedade antes de publicar; o comportamento do banco já possui teste de integração.
 
 ## Transações críticas
 
