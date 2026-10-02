@@ -14,13 +14,13 @@ export default function Home() {
           <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-400 font-bold text-slate-950">↗</span>
           LinkWatch
         </Link>
-        <a className="text-sm text-slate-300 hover:text-white" href="https://github.com/samuelsce/LinkWatch">Ver no GitHub ↗</a>
+        <Link className="text-sm text-slate-300 hover:text-white" href="/login">Entrar com GitHub →</Link>
       </header>
       <main className="flex-1 py-16 sm:py-24">
-        <p className="mb-6 inline-flex rounded-full border border-sky-400/25 bg-sky-400/10 px-4 py-2 text-sm text-sky-300">Em desenvolvimento · Fundação do projeto</p>
+        <p className="mb-6 inline-flex rounded-full border border-sky-400/25 bg-sky-400/10 px-4 py-2 text-sm text-sky-300">Em desenvolvimento · Cadastro de monitores</p>
         <h1 className="max-w-3xl text-4xl leading-tight font-semibold tracking-tight sm:text-6xl">Seus serviços online.<br /><span className="text-sky-400">Você por dentro.</span></h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-400">Um lugar para acompanhar a disponibilidade de sites e APIs, investigar incidentes e comunicar o estado dos seus serviços.</p>
-        <a href="https://github.com/samuelsce/LinkWatch#readme" className="mt-9 inline-block rounded-lg bg-sky-400 px-5 py-3 font-semibold text-slate-950 hover:bg-sky-300">Acompanhar o projeto ↗</a>
+        <Link href="/dashboard" className="mt-9 inline-block rounded-lg bg-sky-400 px-5 py-3 font-semibold text-slate-950 hover:bg-sky-300">Abrir meu painel →</Link>
         <section aria-labelledby="planned-features" className="mt-20">
           <h2 id="planned-features" className="mb-6 text-sm font-medium tracking-widest text-slate-400 uppercase">O que estamos construindo</h2>
           <div className="grid gap-4 md:grid-cols-3">
@@ -33,7 +33,7 @@ export default function Home() {
             ))}
           </div>
         </section>
-        <p className="mt-8 text-sm leading-relaxed text-slate-400">O monitoramento e o login ainda não estão disponíveis nesta versão.</p>
+        <p className="mt-8 text-sm leading-relaxed text-slate-400">Login e cadastro disponíveis em ambientes configurados. Monitoramento automático e página pública de status estão em desenvolvimento.</p>
       </main>
       <footer className="border-t border-slate-800 py-6 text-sm text-slate-400">LinkWatch · Construído por Samuel · Next.js + TypeScript</footer>
     </div>
