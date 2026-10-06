@@ -15,7 +15,6 @@
   --warning: #895b12;
   --control-border: #7c929e;
   --button-ink: #ffffff;
-  --brand: #136582;
   --selection: #cde6ef;
   --warning-border: #e5d4b2;
   --warning-surface: #fff8e9;
@@ -94,8 +93,9 @@ summary { min-height: 32px; }
 .button-secondary:hover { background: var(--accent-soft); }
 .button-primary:active, .button-secondary:active { transform: translateY(1px); }
 .button-primary:disabled, .button-secondary:disabled { opacity: .5; transform: none; }
-.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-size: 20px; font-weight: 650; letter-spacing: -.6px; }
-.brand-mark { width: 32px; height: 32px; flex-shrink: 0; }
+.brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); white-space: nowrap; }
+.brand-mark { width: 32px; height: 36px; flex-shrink: 0; color: var(--accent); }
+.brand-wordmark { font-size: 27px; font-weight: 750; line-height: 1; letter-spacing: -.9px; text-transform: lowercase; }
 .site-width { width: min(1120px, 100%); margin-inline: auto; padding-inline: 28px; }
 .site-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-block: 24px; }
 .site-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--border); padding-block: 24px; font-size: 13px; color: var(--muted); }
