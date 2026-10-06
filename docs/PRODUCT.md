@@ -1,6 +1,6 @@
-# LinkWatch — requisitos do produto
+# LinkWatch: requisitos do produto
 
-Estado: M0–M3 implementados. Worker, histórico, incidentes, gráficos acessíveis e publicação de serviços selecionados estão disponíveis. Jornada E2E acompanha queda/recuperação com worker e visitante sem sessão. Login GitHub requer configurar OAuth App e executar o smoke real; capacidade e deploy ainda precisam de validação.
+Estado: M0 a M3 implementados. Worker, histórico, incidentes, gráficos acessíveis e publicação de serviços selecionados estão disponíveis. Jornada E2E acompanha queda/recuperação com worker e visitante sem sessão. Login GitHub requer configurar OAuth App e executar o smoke real; capacidade e deploy ainda precisam de validação.
 
 ## Objetivo
 
@@ -16,16 +16,16 @@ Desenvolvedor com alguns sites ou APIs públicas. Entra com GitHub, cadastra um 
 
 | Entrega | Conteúdo | Critério de conclusão |
 | --- | --- | --- |
-| M0 — fundação | Documentação, scaffold, banco local e CI | Uma pessoa consegue preparar o ambiente seguindo o README |
-| M1 — acesso e cadastro | Login e gestão de monitores | Dois usuários não conseguem acessar os dados privados um do outro |
-| M2 — monitoramento | Worker, histórico e incidentes | Um endpoint de teste fica offline e volta; o sistema registra o ciclo sem duplicações |
-| M3 — apresentação | Dashboard, gráficos e status público | Dados reais aparecem no painel; dados privados não vazam na página pública |
-| M4 — portfólio publicado | Deploy, smoke tests, screenshots e README | Demo acessível, worker ativo e instalação validada de um checkout limpo |
-| M5 — alertas | Discord, depois e-mail | Notificações de abertura/recuperação com tentativas e deduplicação |
+| M0: fundação | Documentação, scaffold, banco local e CI | Uma pessoa consegue preparar o ambiente seguindo o README |
+| M1: acesso e cadastro | Login e gestão de monitores | Dois usuários não conseguem acessar os dados privados um do outro |
+| M2: monitoramento | Worker, histórico e incidentes | Um endpoint de teste fica offline e volta; o sistema registra o ciclo sem duplicações |
+| M3: apresentação | Dashboard, gráficos e status público | Dados reais aparecem no painel; dados privados não vazam na página pública |
+| M4: portfólio publicado | Deploy, smoke tests, screenshots e README | Demo acessível, worker ativo e instalação validada de um checkout limpo |
+| M5: alertas | Discord, depois e-mail | Notificações de abertura/recuperação com tentativas e deduplicação |
 
 ## Requisitos e critérios de aceite
 
-### R01 — autenticação e propriedade
+### R01: autenticação e propriedade
 
 - Login via GitHub OAuth com Auth.js e sessões no banco; configuração conforme docs/OAUTH_SETUP.md.
 - Cada monitor, incidente e página de status pertence a um usuário.
@@ -33,10 +33,10 @@ Desenvolvedor com alguns sites ou APIs públicas. Entra com GitHub, cadastra um 
 - Sair invalida a sessão; erros de login têm uma mensagem útil.
 - Não haverá cadastro de senha nem equipes no MVP.
 
-### R02 — gestão de monitores
+### R02: gestão de monitores
 
 - Criar, listar, editar, pausar, retomar e excluir um monitor com confirmação de exclusão.
-- Campos: nome de 1–80 caracteres, URL até 2.048 caracteres, intervalo de 1/5/15 minutos, timeout de 2–15 segundos e código HTTP esperado de 200–599 (padrão 200).
+- Campos: nome de 1 a 80 caracteres, URL até 2.048 caracteres, intervalo de 1/5/15 minutos, timeout de 2 a 15 segundos e código HTTP esperado de 200 a 599 (padrão 200).
 - Método GET, portas 80/443, HTTP ou HTTPS. Sem cookies, credenciais na URL, headers personalizados ou corpos de requisição no MVP.
 - Até 10 monitores por usuário no MVP; limite configurável no servidor.
 - Nome pode ser editado sem nova revisão de coleta. Mudar URL, intervalo, timeout ou status esperado inicia uma nova revisão de configuração.
@@ -44,7 +44,7 @@ Desenvolvedor com alguns sites ou APIs públicas. Entra com GitHub, cadastra um 
 - Pausar cancela verificações futuras. Retomar agenda uma verificação imediata e zera a sequência de falhas.
 - Um monitor novo mostra “Aguardando primeira verificação”.
 
-### R03 — verificações
+### R03: verificações
 
 - Worker verifica monitores ativos e vencidos, independente de visitas ao painel.
 - Sucesso: resposta com o código esperado antes do timeout. Latência mede o tempo até os headers; o corpo é descartado e a conexão liberada.
@@ -55,7 +55,7 @@ Desenvolvedor com alguns sites ou APIs públicas. Entra com GitHub, cadastra um 
 - Resultado operacional não atualiza o frescor do endpoint, não resolve incidentes e interrompe a sequência de falhas consecutivas.
 - Uma revisão antiga ou um worker sem lease válida não pode alterar o estado atual.
 
-### R04 — estado e incidentes
+### R04: estado e incidentes
 
 - Estados visíveis: aguardando, online, instável, offline, pausado e sem dados recentes.
 - Primeira falha: instável. Segunda falha consecutiva: offline e abertura de um incidente.
@@ -66,7 +66,7 @@ Desenvolvedor com alguns sites ou APIs públicas. Entra com GitHub, cadastra um 
 - Ao alterar a URL, fechar um incidente aberto como “encerrado por mudança de configuração”, sem chamar isso de recuperação. Zerar sequência e aguardar uma verificação da nova revisão.
 - Ausência de resultados por mais de duas vezes o intervalo + timeout + 30 segundos mostra “Sem dados recentes”; nunca presumir online porque o último check passou.
 
-### R05 — métricas e histórico
+### R05: métricas e histórico
 
 - Filtros de 24 horas, 7 dias e 30 dias, calculados no servidor em UTC.
 - Disponibilidade observada = checks bem-sucedidos / checks concluídos de endpoint × 100. Não representa SLA ou disponibilidade contínua medida em tempo.
@@ -78,7 +78,7 @@ Desenvolvedor com alguns sites ou APIs públicas. Entra com GitHub, cadastra um 
 - Retenção inicial de checks: 30 dias. Incidentes permanecem enquanto o monitor existir; indicar quando as amostras do incidente já expiraram.
 - Exibir última coleta e fuso do usuário. O tooltip distingue latência até headers de tempo total de download.
 
-### R06 — página pública de status
+### R06: página pública de status
 
 - Uma página por usuário, com título, descrição, slug único e escolha explícita dos monitores publicados.
 - Despublicada por padrão; usuário pode publicar e despublicar.
@@ -88,7 +88,7 @@ Desenvolvedor com alguns sites ou APIs públicas. Entra com GitHub, cadastra um 
 - Degradação/falta de dados de um serviço deve aparecer no resumo geral. Pausados aparecem separadamente.
 - Página inexistente ou despublicada retorna 404. Renomear slug faz o slug anterior retornar 404.
 
-### R07 — alertas (após o MVP)
+### R07: alertas (após o MVP)
 
 - Discord primeiro, e-mail depois; ativação explícita por canal.
 - Eventos de abertura e recuperação geram uma entrega por evento/canal, com chave única.
@@ -118,4 +118,4 @@ Billing, planos pagos, equipes, múltiplas regiões, testes de navegador, certif
 ## Decisões confirmadas
 
 - Repositório: [samuelsce/LinkWatch](https://github.com/samuelsce/LinkWatch).
-- Interface em português e README em inglês.
+- Interface em português e README em português.

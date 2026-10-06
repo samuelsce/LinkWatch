@@ -1,6 +1,6 @@
 # Design da interface
 
-Estado: interface implementada nas entregas M0–M3, com identidade visual revisada em outubro de 2026. Interface em português; README em inglês. Dados da apresentação inicial são explicitamente ilustrativos. Painel e status público usam resultados armazenados, sem inventar disponibilidade.
+Estado: interface implementada nas entregas M0 a M3, com identidade visual revisada em outubro de 2026. Interface em português; README em português. Dados da apresentação inicial são explicitamente ilustrativos. Painel e status público usam resultados armazenados, sem inventar disponibilidade.
 
 ## Direção e referências
 
@@ -68,4 +68,25 @@ A página inicial continua estática no build. O SVG ilustrativo é renderizado 
 - Capturas revisadas: página inicial em desktop, 360 px e 768 px; login em mobile/tablet; histórico em desktop; status público em 360 px.
 - E2E verifica teclado, preferência de movimento reduzido, favicon servido e ausência de overflow nas telas públicas. As jornadas existentes verificam cadastro, histórico mobile, publicação, recuperação e isolamento entre contas.
 
-Busca, filtros de monitores, atualização em tempo real, temas alternativos e paginação do histórico não foram adicionados nesta revisão. O histórico mostra até 50 verificações recentes e informa esse limite.
+Busca, filtros de monitores, atualização em tempo real e paginação do histórico não foram adicionados nesta revisão. O histórico mostra até 50 verificações recentes e informa esse limite.
+
+## Temas claro e escuro
+
+O seletor aparece nos cabeçalhos da apresentação, login, painel e página pública. Na primeira visita, segue `prefers-color-scheme`. Depois de uma escolha manual, usa `linkwatch.theme` no armazenamento local. A preferência é compartilhada entre abas pelo evento `storage`; mudanças no tema do dispositivo só alteram a interface quando não há escolha manual.
+
+| Papel | Claro | Escuro |
+| --- | --- | --- |
+| Fundo | `#F4F7F9` | `#111B22` |
+| Superfície | `#FFFFFF` | `#192730` |
+| Texto | `#172B36` | `#E5EDF2` |
+| Secundário | `#536873` | `#ADBEC9` |
+| Ação | `#136582` | `#83C9E3` |
+| Divisor | `#D9E2E7` | `#344651` |
+
+Bordas de controles, fundo do login, mensagens, botões, legendas e marcas do gráfico também usam tokens. No tema escuro, o botão principal tem texto escuro sobre azul claro para manter o contraste. O símbolo da marca mantém sua cor original.
+
+O layout raiz executa um script pequeno e estático no cabeçalho, antes da primeira pintura, para aplicar `data-theme` sem esperar o React. Essa técnica segue o guia `preventing-flash-before-hydration.md` da documentação da versão instalada do Next.js. A supressão de aviso de hidratação fica restrita ao elemento HTML, cujo atributo é ajustado pelo script. O componente do seletor reaplica a preferência antes da pintura após montagens e sincroniza eventos; não adiciona biblioteca nem torna a página inicial dinâmica.
+
+O valor armazenado é validado: somente `light` e `dark` chegam ao atributo. Falhas de acesso ao armazenamento não impedem a troca; nesse caso, a escolha é mantida em memória durante a visita. Ícones e textos do botão são alternados por CSS, mantendo a estrutura renderizada pelo servidor igual à do navegador. O botão possui nome acessível, foco visível e suporte a teclado.
+
+Por preferência do proprietário, títulos e textos usam frases, vírgulas ou dois-pontos em vez de travessões. Interface e README permanecem em português.

@@ -1,4 +1,4 @@
-# Aprendendo com M1 — acesso e cadastro
+# Aprendendo com M1: acesso e cadastro
 
 Esta entrega liga o banco à interface. O usuário entra com GitHub e gerencia apenas os próprios monitores. As requisições periódicas aos endpoints ainda não existem: o worker continua registrando heartbeat.
 

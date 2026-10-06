@@ -1,4 +1,4 @@
-# Aprendendo com M2 — coleta e incidentes
+# Aprendendo com M2: coleta e incidentes
 
 Nesta entrega, o monitor deixa de ser apenas um cadastro: um processo Node faz GET periodicamente, grava a observação e mantém o incidente. A página lê esses registros; fechar o navegador não interrompe o worker.
 

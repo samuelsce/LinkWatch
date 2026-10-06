@@ -9,7 +9,7 @@ O login usa uma OAuth App: o GitHub identifica você e devolve ao LinkWatch uma 
 | --- | --- |
 | Application name | LinkWatch Local |
 | Homepage URL | http://localhost:3000 |
-| Application description | Monitor de sites e APIs — ambiente local |
+| Application description | Monitor de sites e APIs: ambiente local |
 | Authorization callback URL | http://localhost:3000/api/auth/callback/github |
 
 3. Registre a aplicação. Copie o **Client ID**; gere um **Client Secret**.

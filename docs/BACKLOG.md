@@ -4,7 +4,7 @@ Issues propostas para [samuelsce/LinkWatch](https://github.com/samuelsce/LinkWat
 
 ## GitHub Project proposto
 
-Nome: LinkWatch — Product & Engineering. Colunas: Backlog, Ready, In progress, In review, Done. Campos: Priority (P0/P1/P2), Milestone, Area (web/worker/data/docs/ops) e Size (S/M/L). Labels: feature, bug, security, tests, documentation e infrastructure.
+Nome: LinkWatch: Product & Engineering. Colunas: Backlog, Ready, In progress, In review, Done. Campos: Priority (P0/P1/P2), Milestone, Area (web/worker/data/docs/ops) e Size (S/M/L). Labels: feature, bug, security, tests, documentation e infrastructure.
 
 “Ready” exige escopo, critérios de aceite e dependências resolvidas. “Done” exige código revisável, testes aplicáveis e documentação atualizada. Preferir PRs por entrega coerente.
 
@@ -12,7 +12,7 @@ Nome: LinkWatch — Product & Engineering. Colunas: Backlog, Ready, In progress,
 
 | ID | Título | Prioridade / marco | Depende de | Aceite |
 | --- | --- | --- | --- | --- |
-| LW-01 | Scaffold Next.js/TypeScript e entrypoint do worker | P0 / M0 | — | Scripts dev/build/lint/typecheck; lockfile; worker separado; versões compatíveis |
+| LW-01 | Scaffold Next.js/TypeScript e entrypoint do worker | P0 / M0 |: | Scripts dev/build/lint/typecheck; lockfile; worker separado; versões compatíveis |
 | LW-02 | PostgreSQL, Prisma e migrations iniciais | P0 / M0 | LW-01 | Schema implementado, índices/restrições, banco local e migration em banco vazio |
 | LW-03 | CI e instruções reproduzíveis | P0 / M0 | LW-01, LW-02 | Checks executam e README funciona em checkout limpo |
 | LW-04 | Login GitHub e isolamento por proprietário | P0 / M1 | LW-02 | Sessão, logout, consultas/mutations isoladas e testes com dois usuários |
@@ -35,9 +35,9 @@ Status da entrega M0: LW-01, LW-02 e LW-03 implementadas. Schema, migrations, we
 
 Status M1: implementação de LW-04/LW-05 disponível, com sessões, CRUD, limites e isolamento validados em PostgreSQL e navegador. O smoke OAuth real permanece pendente da criação/configuração da OAuth App local.
 
-Status M2: LW-06–LW-09 implementadas: probe HTTP/TLS seguro, leases e fencing, incidentes transacionais, métricas UTC e retenção em lotes. Histórico básico foi conectado ao detalhe para conferir os resultados; gráficos, publicação e E2E com worker + navegador permanecem LW-10–LW-12. Testes não comprovam ainda a meta de capacidade/atraso de 100 monitores.
+Status M2: LW-06 a LW-09 implementadas: probe HTTP/TLS seguro, leases e fencing, incidentes transacionais, métricas UTC e retenção em lotes. Histórico básico foi conectado ao detalhe para conferir os resultados; gráficos, publicação e E2E com worker + navegador permanecem LW-10 a LW-12. Testes não comprovam ainda a meta de capacidade/atraso de 100 monitores.
 
-Status M3: LW-10–LW-12 implementadas: resumo privado, gráfico interativo com lacunas, configuração/publicação, DTO público restrito e jornada E2E com processo worker, fixture HTTP e visitante anônimo. Próximas: LW-13/LW-14 (deploy, backup/restore, capacidade e evidências de portfólio). OAuth real ainda precisa de credenciais e smoke manual. Os IDs continuam sendo planejamento, não issues remotas.
+Status M3: LW-10 a LW-12 implementadas: resumo privado, gráfico interativo com lacunas, configuração/publicação, DTO público restrito e jornada E2E com processo worker, fixture HTTP e visitante anônimo. Próximas: LW-13/LW-14 (deploy, backup/restore, capacidade e evidências de portfólio). OAuth real ainda precisa de credenciais e smoke manual. Os IDs continuam sendo planejamento, não issues remotas.
 
 Começar por LW-01 a LW-03. Depois acesso/cadastro; em seguida um ciclo vertical com probe + scheduler + incidente. Só então gráficos, publicação e deploy. Alertas dependem de incidentes confiáveis.
 

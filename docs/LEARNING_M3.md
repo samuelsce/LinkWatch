@@ -1,4 +1,4 @@
-# Aprendendo com M3 — gráficos e status público
+# Aprendendo com M3: gráficos e status público
 
 A coleta da M2 já gravava os dados. M3 apresenta essas observações e permite compartilhar uma seleção dos serviços. Não foi preciso mudar o schema: StatusPage e StatusPageMonitor estavam nas migrations iniciais e agora são usados pela aplicação.
 

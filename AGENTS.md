@@ -1,7 +1,7 @@
 # LinkWatch working agreement
 
 - Explain meaningful implementation steps and their purpose in Portuguese; the owner is learning from this project.
-- Keep the product interface in Portuguese and README in English.
+- Keep the product interface and README in Portuguese. Avoid em dashes in prose and UI; prefer sentences, commas or colons.
 - Commit each coherent change separately. Do not squash unrelated changes or combine an entire delivery into one commit.
 - The owner has authorized updates to the LinkWatch GitHub repository. Preserve separate commits when pushing; never force-push unless explicitly requested.
 - Follow the product rules in docs/PRODUCT.md. Keep implemented behavior distinct from planned behavior in documentation and UI.

@@ -1,6 +1,6 @@
 # Arquitetura proposta
 
-Estado: M0–M3 implementados. Worker, histórico, gráficos, incidentes, retenção e publicação estão disponíveis. OAuth real depende de configuração e smoke manual. Deploy, restore e teste de carga ainda são planejamento.
+Estado: M0 a M3 implementados. Worker, histórico, gráficos, incidentes, retenção e publicação estão disponíveis. OAuth real depende de configuração e smoke manual. Deploy, restore e teste de carga ainda são planejamento.
 
 ## Estrutura
 

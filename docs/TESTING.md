@@ -20,10 +20,10 @@ M3 inclui 102 testes unitários, 44 de integração PostgreSQL/rede e 10 jornada
 - Dois schedulers competem pelo mesmo ciclo; lease expirada troca token sem trocar runId; conclusão antiga, duplicada, após expiração, pausa, edição ou exclusão é rejeitada.
 - Ciclo HTTP real pelo WorkerRuntime: online → instável → offline → recuperado, com um incidente. Teste adicional verifica cinco slots e a sexta tarefa sem reserva antecipada.
 - Falha de persistência reverte a transação inteira. Coleta preserva updatedAt da configuração para não invalidar formulário apenas pela atividade do worker.
-- Disponibilidade vazia é null; p95 de 1–20 é 19; janelas UTC e lacunas são verificadas; dois cleaners não duplicam remoção, preservando execuções ativas e incidentes.
+- Disponibilidade vazia é null; p95 de 1 a 20 é 19; janelas UTC e lacunas são verificadas; dois cleaners não duplicam remoção, preservando execuções ativas e incidentes.
 - Browser mostra métricas/recuperação e filtros no mobile a partir de registros de fixture. Não confundir essa jornada com a autorização GitHub real ou com E2E orquestrando worker.
 
-## Regras de domínio — testes unitários
+## Regras de domínio: testes unitários
 
 - Primeira falha deixa instável; segunda abre incidente com início na primeira falha.
 - Falha isolada seguida de sucesso não cria incidente.
@@ -33,13 +33,13 @@ M3 inclui 102 testes unitários, 44 de integração PostgreSQL/rede e 10 jornada
 - p95 nearest-rank com amostras pequenas, repetidas e limites do período.
 - Estado sem dados recentes e resumo público com monitores pausados/desconhecidos.
 
-## URL safety — unitários e integração HTTP isolada
+## URL safety: unitários e integração HTTP isolada
 
 Testar localhost, IPv4/IPv6 privados, endereços mapeados, formatos alternativos, DNS público/privado misto, metadados, credenciais, portas e protocolos proibidos. Simular DNS rebinding e confirmar que a conexão usa o IP validado. Testar redirects sem seguir destino, timeout, erro TLS e descarte do corpo.
 
 Usar um resolver/transport injetável para fixtures. Qualquer permissão de host local é exclusiva do harness de testes, sem variável de produção capaz de desabilitar todas as proteções.
 
-## PostgreSQL — integração real
+## PostgreSQL: integração real
 
 - Dois workers disputam o mesmo monitor: um resultado persistido por ciclo e um incidente aberto.
 - Crash antes/depois da requisição e antes/depois do commit; recuperação de lease e rejeição do token antigo.
@@ -52,7 +52,7 @@ Usar um resolver/transport injetável para fixtures. Qualquer permissão de host
 
 Usar banco descartável separado do ambiente de desenvolvimento/produção. Não executar limpeza de dados contra DATABASE_URL de produção.
 
-## E2E — jornadas críticas
+## E2E: jornadas críticas
 
 1. Usuário autenticado cria monitor, aguarda check real do fixture e consulta histórico.
 2. Fixture falha duas vezes e recupera; incidente aparece e fecha.
@@ -76,3 +76,9 @@ Teste de capacidade: 100 monitores, concorrência 5, endpoints com latência nor
 A suíte de apresentação verifica navegação da página inicial pelo teclado, foco visível, preferência por movimento reduzido, carregamento dos favicons SVG/ICO e ausência de overflow em 360/768 px na apresentação e login. Capturas são salvas em `test-results/`, ignorado pelo Git, para inspeção visual. As jornadas de monitoramento continuam cobrindo detalhe e status público com dados reais de um worker de testes.
 
 Esta revisão passou 102 testes unitários, 44 de integração PostgreSQL e 12 jornadas de navegador, além de lint, tipos, build de produção e smoke dos processos. As medições de desempenho em hospedagem e o login OAuth real continuam pendentes da configuração do ambiente; não são inferidos desses resultados.
+
+## Validação dos temas
+
+A suíte de apresentação também cobre tema do dispositivo, escolha manual persistida após recarregar, navegação entre rotas, sincronização entre abas e armazenamento bloqueado. Uma jornada impede o carregamento dos arquivos JavaScript do React para comprovar que o tema salvo é aplicado pelo script inicial. O console é observado durante a navegação normal para detectar avisos de hidratação.
+
+Formulário privado em 360 px, histórico e página pública são capturados no tema escuro. A suíte atual possui 102 testes unitários, 44 de integração e 15 jornadas de navegador. Esses testes usam somente o banco descartável indicado por `TEST_DATABASE_URL`.
