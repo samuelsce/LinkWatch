@@ -102,6 +102,36 @@ test("logout removes the database session and rejects its old cookie", async ({ 
   expect(response.headers().location).toBe("/login");
 });
 
+test("stored markup stays inert in private and public status pages", async ({ page, context, browser }) => {
+  const user = await session(context, "Stored markup test");
+  const monitorId = randomUUID();
+  const slug = `markup-${randomUUID()}`;
+  const publicName = '<img src=x onerror="window.__linkwatchXss=1">';
+  const title = '<script>window.__linkwatchXss=1</script>';
+  const description = '<svg onload="window.__linkwatchXss=1"></svg>';
+  await pool.query('INSERT INTO "Monitor" (id,"ownerId",name,url,"updatedAt") VALUES ($1,$2,$3,$4,NOW())', [monitorId, user.id, publicName, "https://example.com/health?token=private-secret"]);
+  await page.goto("/status-page");
+  await page.getByLabel("Título", { exact: true }).fill(title);
+  await page.getByLabel("Descrição", { exact: true }).fill(description);
+  await page.getByLabel("Slug público", { exact: true }).fill(slug);
+  await page.getByRole("checkbox", { name: publicName, exact: true }).check();
+  await page.getByLabel("Publicar página de status", { exact: true }).check();
+  await page.getByRole("button", { name: "Salvar página de status", exact: true }).click();
+  await expect(page.getByRole("link", { name: "Abrir página pública" })).toBeVisible();
+  expect(await page.evaluate(() => Reflect.get(window, "__linkwatchXss"))).toBeUndefined();
+  const visitor = await browser.newContext();
+  try {
+    const publicPage = await visitor.newPage();
+    await publicPage.goto(`/status/${slug}`);
+    await expect(publicPage.getByRole("heading", { name: title, exact: true })).toBeVisible();
+    await expect(publicPage.getByRole("heading", { name: publicName, exact: true })).toBeVisible();
+    await expect(publicPage.getByText(description, { exact: true })).toBeVisible();
+    await expect(publicPage.locator("img[onerror], svg[onload]")).toHaveCount(0);
+    expect(await publicPage.evaluate(() => Reflect.get(window, "__linkwatchXss"))).toBeUndefined();
+    expect(await publicPage.content()).not.toContain("private-secret");
+  } finally { await visitor.close(); }
+});
+
 test("mobile form has labels and fits a narrow viewport", async ({ page, context }, info) => {
   await session(context, "Mobile test");
   await page.emulateMedia({ colorScheme: "dark" });
