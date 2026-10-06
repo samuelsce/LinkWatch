@@ -5,6 +5,7 @@ import { readPublicPage } from "@/features/status-pages/public";
 import { statusLabels } from "@/domain/visible-status";
 import { LocalTime } from "@/components/local-time";
 import { Brand } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const dynamic = "force-dynamic";
 export default async function PublicStatus({ params }: { params: Promise<{ slug: string }> }) {
@@ -12,7 +13,7 @@ export default async function PublicStatus({ params }: { params: Promise<{ slug:
   const page = await readPublicPage(getDatabase(), slug);
   if (!page) notFound();
   return <div className="mx-auto min-h-screen max-w-3xl px-5 sm:px-8">
-    <header className="site-header border-b border-soft"><Link href="/" aria-label="LinkWatch, início"><Brand /></Link><span className="text-sm muted">Status dos serviços</span></header>
+    <header className="site-header border-b border-soft"><Link href="/" aria-label="LinkWatch, início"><Brand /></Link><div className="header-actions"><span className="hidden text-sm muted sm:inline">Status dos serviços</span><ThemeToggle /></div></header>
     <main className="py-10" id="main-content">
       <h1 className="break-words text-3xl font-semibold tracking-tight">{page.title}</h1>
       {page.description && <p className="mt-4 whitespace-pre-wrap break-words leading-relaxed muted">{page.description}</p>}

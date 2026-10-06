@@ -7,7 +7,7 @@ export function StatusPageForm({ page, monitors }: Props) {
   const [state, action, pending] = useActionState(saveStatusPage, {});
   return <form action={action} className="form-panel mt-8 max-w-3xl space-y-6">
     {page && <input type="hidden" name="updatedAt" value={page.updatedAt} />}
-    {state.message && <p role={state.success ? "status" : "alert"} className={`rounded-lg border p-4 ${state.success ? "border-[#b9d8c7] positive" : "border-[#edccd0] negative"}`}>{state.message}</p>}
+    {state.message && <p role={state.success ? "status" : "alert"} className={`rounded-lg border p-4 ${state.success ? "border-positive positive" : "border-negative negative"}`}>{state.message}</p>}
     <label className="block">Título<input name="title" required maxLength={120} defaultValue={page?.title ?? ""} className="mt-2 block w-full field rounded-md border p-3" /></label>
     <label className="block">Descrição<textarea name="description" maxLength={500} defaultValue={page?.description ?? ""} className="mt-2 block w-full field rounded-md border p-3" /></label>
     <label className="block">Slug público<input name="slug" required minLength={3} maxLength={80} pattern="[a-z0-9]+(-[a-z0-9]+)*" defaultValue={page?.slug ?? ""} aria-describedby="slug-help" className="mt-2 block w-full field rounded-md border p-3" /></label>

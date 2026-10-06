@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@/server/session";
 import { isGitHubConfigured } from "@/auth";
 import { Brand } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { loginWithGitHub } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   const { error } = await searchParams;
   const configured = isGitHubConfigured();
   return <main className="login-shell" id="main-content">
-    <aside className="login-aside"><Link href="/" aria-label="LinkWatch, início"><Brand /></Link><div><h2>Um lugar para cuidar dos seus serviços.</h2><p className="mt-5 max-w-sm leading-relaxed muted">Disponibilidade, latência e incidentes. Do seu painel privado à página de status que você compartilha.</p></div><p className="text-sm muted">LinkWatch, por Samuel</p></aside>
+    <aside className="login-aside"><div className="flex flex-wrap items-center justify-between gap-4"><Link href="/" aria-label="LinkWatch, início"><Brand /></Link><ThemeToggle /></div><div><h2>Um lugar para cuidar dos seus serviços.</h2><p className="mt-5 max-w-sm leading-relaxed muted">Disponibilidade, latência e incidentes. Do seu painel privado à página de status que você compartilha.</p></div><p className="text-sm muted">LinkWatch, por Samuel</p></aside>
     <section className="login-content" aria-labelledby="login-title"><div>
       <h1 id="login-title" className="text-3xl font-semibold tracking-tight">Entre para acompanhar seus serviços</h1>
       <p className="mt-4 leading-relaxed muted">Use sua conta GitHub. Seus monitores ficam em um painel privado.</p>

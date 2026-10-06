@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Brand } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const features = [
   ["Saiba quando algo muda", "Verificações automáticas e incidentes com início e recuperação registrados."],
@@ -9,7 +10,7 @@ const features = [
 
 export default function Home() {
   return <div className="site-width">
-    <header className="site-header"><Link href="/" aria-label="LinkWatch, início"><Brand /></Link><Link className="link text-sm font-medium" href="/login">Entrar com GitHub</Link></header>
+    <header className="site-header"><Link href="/" aria-label="LinkWatch, início"><Brand /></Link><div className="header-actions"><Link className="link text-sm font-medium" href="/login" aria-label="Entrar com GitHub"><span className="hidden sm:inline">Entrar com GitHub</span><span className="sm:hidden">Entrar</span></Link><ThemeToggle /></div></header>
     <main id="main-content">
       <section className="hero" aria-labelledby="home-title">
         <div><h1 id="home-title">Seus serviços online.<br />Sem perder de vista.</h1><p className="hero-copy">Acompanhe seus sites e APIs, entenda as interrupções e compartilhe o status em um só lugar.</p><Link href="/dashboard" className="button-primary px-6 py-3">Abrir meu painel</Link><p className="mt-4 text-sm muted">Acesso com sua conta GitHub.</p></div>
