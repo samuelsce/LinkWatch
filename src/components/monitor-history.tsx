@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { monitorHistory } from "../features/monitors/history";
 import { LocalTime } from "./local-time";
+import { LatencyChart } from "./latency-chart";
 
 type History = Awaited<ReturnType<typeof monitorHistory>>;
 const outcomes = { SUCCESS: "Sucesso", FAILURE: "Falha", BLOCKED: "Bloqueado por segurança", COLLECTOR_ERROR: "Erro de coleta" };
@@ -16,6 +17,7 @@ export function MonitorHistory({ id, hours, history }: { id: string; hours: numb
         ["Latência p95", history.p95Ms === null ? "Sem dados" : `${history.p95Ms} ms`],
       ].map(([label, value]) => <div key={label} className="rounded-xl border border-slate-800 bg-slate-900/60 p-5"><dt className="text-sm text-slate-400">{label}</dt><dd className="mt-3 text-xl font-semibold">{value}</dd></div>)}</dl>
       <p className="mt-4 text-sm text-slate-400">{history.samples} amostras de endpoint · {history.successes} sucessos · {history.operational} resultados operacionais. Disponibilidade por checks, sem garantia de SLA. Latência até os headers, apenas em sucessos.</p>
+      <LatencyChart buckets={history.buckets} bucketSeconds={history.bucketSeconds} />
       {(history.stale || history.late > 0 || history.operational > 0 || history.gaps > 0) && <p className="mt-4 rounded-lg border border-amber-400/20 p-4 text-sm text-amber-200">Há ausência, atraso ou interrupção de coleta. {history.late} checks iniciaram com mais de 30 s de atraso; {history.gaps} lacunas entre observações da revisão atual. Períodos sem checks e erros de coleta ficam fora da disponibilidade.</p>}
       {!history.checks.length ? <p className="mt-5 rounded-xl border border-dashed border-slate-700 p-6 text-slate-400">Sem verificações neste período. O worker precisa estar em execução para coletar dados.</p> : <div className="mt-5 overflow-x-auto rounded-xl border border-slate-800"><table className="w-full text-left text-sm"><caption className="p-3 text-left text-slate-400">Até 50 verificações recentes · horários no fuso do navegador</caption><thead className="bg-slate-900 text-slate-300"><tr>{["Horário", "Resultado", "HTTP", "Latência", "Revisão"].map((label) => <th key={label} className="p-3">{label}</th>)}</tr></thead><tbody>{history.checks.map((check) => <tr key={check.id} className="border-t border-slate-800"><td className="whitespace-nowrap p-3"><LocalTime value={check.completedAt!.toISOString()} /></td><td className="p-3"><span className={check.outcome === "SUCCESS" ? "text-green-300" : "text-amber-300"}>{outcomes[check.outcome!]}</span>{check.errorCode && <p className="mt-1 text-xs text-slate-400">{reasons[check.errorCode] ?? "Falha registrada"}</p>}</td><td className="p-3">{check.httpStatus ?? "—"}</td><td className="whitespace-nowrap p-3">{check.outcome === "SUCCESS" && check.latencyMs !== null ? `${check.latencyMs} ms` : "—"}</td><td className="p-3">{check.revision}</td></tr>)}</tbody></table></div>}
     </section>
