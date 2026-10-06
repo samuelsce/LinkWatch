@@ -1,41 +1,27 @@
 import Link from "next/link";
+import { Brand } from "@/components/brand";
 
-const stages = [
-  { number: "01", title: "Cadastre seus serviços", description: "Sites e endpoints HTTP em um único lugar." },
-  { number: "02", title: "Acompanhe cada verificação", description: "Histórico de disponibilidade, latência e incidentes." },
-  { number: "03", title: "Compartilhe o status", description: "Uma página pública com os serviços que você escolher." },
+const features = [
+  ["Saiba quando algo muda", "Verificações automáticas e incidentes com início e recuperação registrados."],
+  ["Investigue com dados", "Consulte a disponibilidade observada e a latência de cada serviço em diferentes períodos."],
+  ["Mantenha as pessoas informadas", "Publique uma página de status com os serviços que escolher compartilhar."],
 ];
 
 export default function Home() {
-  return (
-    <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-6 sm:px-10">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 py-7">
-        <Link href="/" className="flex items-center gap-3 text-xl font-semibold tracking-tight" aria-label="LinkWatch, início">
-          <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-400 font-bold text-slate-950">↗</span>
-          LinkWatch
-        </Link>
-        <Link className="text-sm text-slate-300 hover:text-white" href="/login">Entrar com GitHub →</Link>
-      </header>
-      <main className="flex-1 py-16 sm:py-24">
-        <p className="mb-6 inline-flex rounded-full border border-sky-400/25 bg-sky-400/10 px-4 py-2 text-sm text-sky-300">Em desenvolvimento · Cadastro de monitores</p>
-        <h1 className="max-w-3xl text-4xl leading-tight font-semibold tracking-tight sm:text-6xl">Seus serviços online.<br /><span className="text-sky-400">Você por dentro.</span></h1>
-        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-400">Um lugar para acompanhar a disponibilidade de sites e APIs, investigar incidentes e comunicar o estado dos seus serviços.</p>
-        <Link href="/dashboard" className="mt-9 inline-block rounded-lg bg-sky-400 px-5 py-3 font-semibold text-slate-950 hover:bg-sky-300">Abrir meu painel →</Link>
-        <section aria-labelledby="planned-features" className="mt-20">
-          <h2 id="planned-features" className="mb-6 text-sm font-medium tracking-widest text-slate-400 uppercase">O que estamos construindo</h2>
-          <div className="grid gap-4 md:grid-cols-3">
-            {stages.map((stage) => (
-              <article key={stage.number} className="rounded-xl border border-slate-800 bg-slate-900/70 p-6">
-                <span className="font-mono text-sm text-sky-400">{stage.number}</span>
-                <h3 className="mt-6 text-lg font-semibold">{stage.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-400">{stage.description}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-        <p className="mt-8 text-sm leading-relaxed text-slate-400">Login, cadastro, monitoramento, gráficos e página pública de status disponíveis em ambientes configurados, com o worker ativo. O deploy público está em preparação.</p>
-      </main>
-      <footer className="border-t border-slate-800 py-6 text-sm text-slate-400">LinkWatch · Construído por Samuel · Next.js + TypeScript</footer>
-    </div>
-  );
+  return <div className="site-width">
+    <header className="site-header"><Link href="/" aria-label="LinkWatch, início"><Brand /></Link><Link className="link text-sm font-medium" href="/login">Entrar com GitHub</Link></header>
+    <main id="main-content">
+      <section className="hero" aria-labelledby="home-title">
+        <div><h1 id="home-title">Seus serviços online.<br />Sem perder de vista.</h1><p className="hero-copy">Acompanhe seus sites e APIs, entenda as interrupções e compartilhe o status em um só lugar.</p><Link href="/dashboard" className="button-primary px-6 py-3">Abrir meu painel</Link><p className="mt-4 text-sm muted">Acesso com sua conta GitHub.</p></div>
+        <figure className="demo" aria-labelledby="demo-caption">
+          <figcaption id="demo-caption" className="demo-heading"><span className="font-semibold">Visão dos serviços</span><span className="muted">Exemplo ilustrativo</span></figcaption>
+          <div className="demo-row"><span className="font-semibold">API principal</span><span className="positive"><span className="status-dot" aria-hidden="true" />Online</span><small>Disponibilidade observada</small><small>99,96%</small></div>
+          <div className="demo-row"><span className="font-semibold">Site institucional</span><span className="positive"><span className="status-dot" aria-hidden="true" />Online</span><small>Disponibilidade observada</small><small>100,00%</small></div>
+          <div className="demo-chart"><div className="flex items-center justify-between text-sm"><span className="muted">Latência da API</span><span className="font-semibold">82 ms</span></div><svg viewBox="0 0 400 110" className="mt-4 w-full" fill="none" role="img" aria-label="Curva ilustrativa de latência; não representa dados reais"><path d="M0 30H400M0 65H400M0 100H400" stroke="var(--border)" /><path className="signal-trace" d="M0 78L18 74L36 79L54 64L72 68L90 75L108 71L126 77L144 67L162 70L180 42L198 50L216 72L234 70L252 78L270 66L288 69L306 61L324 72L342 75L360 64L378 70L400 67" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg><div className="flex justify-between pb-2 text-xs muted"><span>Há 24 horas</span><span>Agora</span></div></div>
+        </figure>
+      </section>
+      <section className="feature-section" aria-labelledby="features-title"><h2 id="features-title">Da primeira verificação à recuperação.</h2><div>{features.map(([title, description]) => <article className="feature-item" key={title}><h3>{title}</h3><p>{description}</p></article>)}</div></section>
+    </main>
+    <footer className="site-footer"><span>LinkWatch, por Samuel</span><a className="link" href="https://github.com/samuelsce/LinkWatch">Conhecer o projeto no GitHub</a></footer>
+  </div>;
 }
