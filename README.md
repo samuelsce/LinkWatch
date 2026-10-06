@@ -6,7 +6,8 @@ An uptime monitoring tool for websites and HTTP APIs. Register an endpoint, trac
 
 ## Available now
 
-- A responsive Portuguese landing page, explicitly marked as in development.
+- A clean Portuguese interface with a light palette, shared visual tokens and custom SVG/ICO favicons.
+- A clearly labeled illustrative landing preview, CSS micro-interactions and reduced-motion support, without extra animation libraries or external fonts.
 - GitHub sign-in, session invalidation on logout, and private routes.
 - Create, list, edit, pause, resume, and delete monitors with server-side validation.
 - Owner isolation, configurable per-user limits, and conflict detection for stale forms.

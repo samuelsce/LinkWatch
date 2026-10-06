@@ -70,3 +70,9 @@ No scaffold, adicionar lint, typecheck, testes unitários e build. Integração 
 Release exige todos os checks aplicáveis passando, migrações testadas, smoke test no deploy, worker com heartbeat recente, coleta real, página pública sanitizada e README validado de checkout limpo.
 
 Teste de capacidade: 100 monitores, concorrência 5, endpoints com latência normal e timeouts. Medir p95 do atraso da agenda, memória e crescimento do banco. Ajustar limite do demo ao resultado; não presumir que timeout de todos os monitores cabe na meta.
+
+## Revisão visual de outubro de 2026
+
+A suíte de apresentação verifica navegação da página inicial pelo teclado, foco visível, preferência por movimento reduzido, carregamento dos favicons SVG/ICO e ausência de overflow em 360/768 px na apresentação e login. Capturas são salvas em `test-results/`, ignorado pelo Git, para inspeção visual. As jornadas de monitoramento continuam cobrindo detalhe e status público com dados reais de um worker de testes.
+
+Esta revisão passou 102 testes unitários, 44 de integração PostgreSQL e 12 jornadas de navegador, além de lint, tipos, build de produção e smoke dos processos. As medições de desempenho em hospedagem e o login OAuth real continuam pendentes da configuração do ambiente; não são inferidos desses resultados.
