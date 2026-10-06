@@ -1,127 +1,88 @@
 # LinkWatch
 
-Monitor de disponibilidade para sites e APIs HTTP. Cadastre um endpoint, acompanhe a disponibilidade e a latência, investigue incidentes e compartilhe uma página pública de status.
+Monitor de disponibilidade para sites e APIs HTTP. Cadastre um endpoint, acompanhe latência e falhas, investigue incidentes e compartilhe uma página pública de status.
 
-**Estado do projeto:** entregas M0 a M3 implementadas. O worker executa verificações HTTP seguras e registra incidentes e recuperações. O painel apresenta métricas reais e gráficos; a publicação de serviços selecionados está disponível. O login GitHub funciona em ambientes configurados, mas o ciclo OAuth real ainda precisa de credenciais locais e validação manual. Deploy, testes de capacidade e alertas continuam planejados.
+**[Guia de avaliação](docs/AVALIACAO.md) · [Executar localmente](#executar-localmente) · [Arquitetura](docs/ARCHITECTURE.md) · [CI](https://github.com/samuelsce/LinkWatch/actions)**
 
-## Funcionalidades disponíveis
+![Página inicial do LinkWatch no tema claro](docs/screenshots/home-desktop.png)
 
-- Interface em português com temas claro e escuro, cores compartilhadas e favicons SVG/ICO.
-- Tema inicial conforme o dispositivo, seletor nos cabeçalhos e preferência salva no navegador.
-- Apresentação com exemplo identificado, animações curtas em CSS e respeito à preferência por movimento reduzido.
-- Login GitHub, sessões no banco, rotas privadas e encerramento da sessão ao sair.
-- Cadastro, edição, pausa, retomada e exclusão de monitores com validação no servidor.
-- Isolamento entre usuários, limite configurável de monitores e detecção de alterações concorrentes.
-- Banco PostgreSQL com Prisma 7, migrations versionadas e restrições de domínio.
-- Worker independente com até cinco verificações concorrentes, reservas no banco, recuperação após falhas e encerramento controlado.
-- Validação de DNS e do IP da conexão, TLS verificado, tempo limite total e ausência de redirecionamentos ou download do corpo da resposta.
-- Incidentes registrados na mesma transação das verificações, confirmados após duas falhas consecutivas e resolvidos após um sucesso.
-- Histórico de 24 horas, 7 dias e 30 dias, disponibilidade observada, latência média e p95.
-- Gráficos com lacunas reais, marcas de falhas e erros de coleta, controle por teclado e tabela alternativa.
-- Página pública opcional com seleção explícita dos serviços, nomes públicos, alteração de endereço e despublicação.
-- Dados públicos sem URLs monitoradas, identidade do dono, IDs internos, credenciais ou erros técnicos.
-- Retenção de verificações concluídas por 30 dias; incidentes permanecem enquanto o monitor existir.
-- Endpoints de saúde da aplicação e do banco, testes automatizados e CI no GitHub Actions.
+Projeto de portfólio full stack de [@samuelsce](https://github.com/samuelsce), com foco em processos em segundo plano, concorrência, isolamento de dados e segurança de requisições externas. A aplicação web, o worker e a página pública estão implementados. A avaliação disponível é local; deploy, validação do OAuth real e testes de capacidade seguem pendentes.
 
-## Por que este projeto
+A captura acima vem do build local. Os números da apresentação estão identificados na interface como **exemplo ilustrativo** e não representam disponibilidade medida em produção.
 
-O LinkWatch explora decisões de uma ferramenta de monitoramento: agendamento em segundo plano, concorrência entre workers, transições de incidentes, métricas com significado claro, isolamento dos dados e segurança das requisições HTTP.
+## Conheça o projeto em dois minutos
 
-## Próximas entregas
+1. Abra a apresentação local e experimente os temas claro e escuro, inclusive em uma tela estreita.
+2. Com PostgreSQL, OAuth e worker configurados, entre pelo GitHub e cadastre um endpoint público que responda sem redirecionamento.
+3. Abra o monitor para consultar as verificações, disponibilidade observada, latência média, p95 e incidentes.
+4. Pause e retome a coleta. O painel distingue serviços pausados, indisponíveis e sem observações recentes.
+5. Em **Página de status**, selecione os serviços, revise seus nomes públicos e publique. Abra o endereço em uma janela sem sessão para conferir o que um visitante recebe.
 
-- Hospedagem da aplicação e do worker, com backups e teste de restauração.
-- Validação do login OAuth real, capacidade e atraso do agendamento.
-- Demonstração pública, capturas e gravação do fluxo de queda e recuperação.
-- Alertas por Discord e, depois, e-mail.
+Para uma avaliação pelo código, o [guia de avaliação técnica](docs/AVALIACAO.md) relaciona cada decisão aos arquivos e testes que a demonstram. Para uma prévia visual, basta iniciar a web; o fluxo completo exige banco, OAuth e worker.
 
-Múltiplas regiões, cobrança, equipes e testes completos de navegador em endpoints monitorados ficam fora do escopo inicial.
+## Funcionalidades
+
+- Login GitHub, sessões no PostgreSQL, rotas privadas e logout que invalida a sessão.
+- Cadastro, edição, pausa, retomada e exclusão de monitores, com validação no servidor e limite por conta.
+- Coleta em processo independente, até cinco requisições simultâneas por worker e recuperação de reservas expiradas.
+- Verificações GET com validação de URL, DNS e IP, TLS verificado e tempo limite total.
+- Incidentes confirmados após duas falhas consecutivas e resolvidos após um sucesso.
+- Histórico de 24 horas, 7 dias e 30 dias; gráficos com lacunas, falhas e tabela alternativa.
+- Página pública opcional, com seleção de serviços e sem exposição de URLs monitoradas ou identidade do dono.
+- Temas claro e escuro, preferência persistida, teclado, foco visível e respeito a movimento reduzido.
+- Retenção de verificações, heartbeat do worker, endpoints de saúde e CI com testes de banco e navegador.
+
+## Decisões que vale inspecionar
+
+| Problema | Solução implementada | Onde ler |
+| --- | --- | --- |
+| Continuar coletando sem visitas ao painel | Worker Node independente da aplicação web | [runtime.ts](src/worker/runtime.ts), [ADR do worker](docs/adr/0001-separate-monitoring-worker.md) |
+| Dois workers tentarem concluir o mesmo ciclo | Reservas com vencimento, token e revisão de configuração, conferidos na transação de conclusão | [scheduler.ts](src/monitoring/scheduler.ts), [testes concorrentes](tests/integration/scheduler.test.ts) |
+| Uma URL alcançar a rede interna por DNS ou redirecionamento | Rejeitar destinos proibidos, fixar o IP validado e não seguir redirecionamentos | [probe.ts](src/monitoring/probe.ts), [testes HTTP/TLS](tests/integration/probe-http.test.ts) |
+| Alterar dados de outra conta ou perder uma edição concorrente | Dono derivado da sessão, locks e comparação de `updatedAt` | [service.ts](src/features/monitors/service.ts), [jornadas de isolamento](tests/e2e/monitors.spec.ts) |
+| Confundir erro do coletor com falha do endpoint | Resultados operacionais separados e regras puras de transição | [check-transition.ts](src/domain/check-transition.ts), [history.ts](src/features/monitors/history.ts) |
+| Publicar status sem vazar dados privados | Seleção explícita e projeção restrita de campos públicos | [public.ts](src/features/status-pages/public.ts), [testes de publicação](tests/integration/status-pages.test.ts) |
+
+## Interface
+
+![Painel do LinkWatch com três serviços de demonstração](docs/screenshots/dashboard-desktop.png)
+
+O painel reúne os serviços em uma lista contínua, com estado e frequência de coleta. O detalhe permite investigar o histórico e a recuperação de incidentes. Veja o [histórico no tema escuro](docs/screenshots/history-dark-desktop.png) e a [página pública no celular](docs/screenshots/status-mobile.png).
+
+As capturas do painel, histórico e status usam **registros fictícios em um banco de testes isolado**. Mostram a interface implementada, sem representar uma demo hospedada, um login OAuth real ou resultados de carga. A [origem das capturas](docs/screenshots/README.md) está documentada.
 
 ## Tecnologias
 
-| Camada | Escolha | Finalidade |
-| --- | --- | --- |
-| Web | Next.js 16, React 19 e TypeScript | Painel privado e gestão de monitores |
-| Worker | Node.js 24, TypeScript e tsx | Agendamento, coleta, incidentes e retenção |
-| Dados | PostgreSQL, Prisma 7 e adaptador pg | Persistência, migrations e reservas de execução |
-| Autenticação | Auth.js v5 beta, adaptador Prisma e GitHub OAuth | Sessões no banco e login pelo GitHub |
-| Interface | Tailwind CSS 4 e variáveis CSS | Layout responsivo e temas |
-| Validação | Vitest 5, PostgreSQL, Playwright e testes de processos | Regras, segurança, isolamento e jornadas completas |
+Next.js 16, React 19, TypeScript, Node.js 24, PostgreSQL, Prisma 7 e Auth.js v5 beta com GitHub OAuth. Tailwind CSS 4 e SVG compõem a interface; Bricolage Grotesque é servida localmente apenas na marca. Vitest cobre regras e integração; Playwright valida as jornadas no navegador.
 
-As versões exatas estão fixadas em `package.json` e `package-lock.json`. A hospedagem deve permitir um worker em execução contínua; o monitoramento não depende de um cron diário.
+As versões reproduzíveis estão em [package.json](package.json) e [package-lock.json](package-lock.json). A aplicação web e o worker compartilham regras e banco no mesmo repositório.
 
-## Documentação
+## Executar localmente
 
-- [Requisitos do produto](docs/PRODUCT.md): escopo, regras e critérios de aceite.
-- [Design da interface](docs/DESIGN.md): referências, cores, temas, composição e acessibilidade.
-- [Arquitetura](docs/ARCHITECTURE.md): divisão entre aplicação web e worker.
-- [Modelo do banco](docs/DATABASE.md): entidades, relações, restrições e índices.
-- [Backlog](docs/BACKLOG.md): entregas e tarefas planejadas.
-- [Estratégia de testes](docs/TESTING.md): validação e critérios de release.
-- [Revisão de segurança](docs/SECURITY.md): proteções verificadas, correções e pendências antes do deploy público.
-- [Decisão sobre o worker](docs/adr/0001-separate-monitoring-worker.md): por que a coleta usa um processo separado.
-- [Guia da fundação](docs/LEARNING.md): estrutura inicial e evolução por commits.
-- [Guia de M1](docs/LEARNING_M1.md): autenticação, autorização e alterações de dados.
-- [Guia de M2](docs/LEARNING_M2.md): DNS, reservas, incidentes, métricas e retenção.
-- [Guia de M3](docs/LEARNING_M3.md): gráficos, publicação, privacidade e jornadas com worker.
-- [Configuração do GitHub OAuth](docs/OAUTH_SETUP.md): criação da OAuth App e credenciais locais.
+Requisitos: Git, Node.js **24** e npm. PostgreSQL e uma GitHub OAuth App são necessários para o fluxo autenticado; Docker Compose é uma opção para o banco.
 
-Interface, README e documentação do produto usam português. Repositório: [samuelsce/LinkWatch](https://github.com/samuelsce/LinkWatch).
-
-## Desenvolvimento local
-
-Requisitos: Node.js 24, npm, Git e PostgreSQL. Docker Compose é opcional; `compose.yaml` fornece PostgreSQL 17 para desenvolvimento. As credenciais desse arquivo são exemplos locais e não devem ser usadas em produção.
-
-```bash
+```sh
 git clone https://github.com/samuelsce/LinkWatch.git
 cd LinkWatch
 npm ci
-```
-
-Prepare o arquivo `.env` e gere um segredo de sessão sem exibi-lo:
-
-```bash
 node scripts/setup-local-env.mjs
-```
-
-Configure `DATABASE_URL` e as credenciais GitHub OAuth no `.env`, seguindo o [guia de configuração](docs/OAUTH_SETUP.md). O script preserva os valores existentes. Use `http://localhost:3000` de forma consistente no OAuth, sem alternar com `127.0.0.1`.
-
-Com Docker instalado:
-
-```bash
-docker compose up -d db
-npm run db:deploy
 npm run dev
 ```
 
-Sem Docker, configure um banco PostgreSQL existente no `.env`, aplique as migrations com `npm run db:deploy` e execute `npm run dev`. A aplicação fica disponível em [localhost:3000](http://localhost:3000).
+Abra [localhost:3000](http://localhost:3000) para conferir a apresentação e os temas. O script prepara `.env` e gera um segredo de sessão sem imprimi-lo. Preserve esse arquivo fora do Git.
 
-Em um segundo terminal:
+Para o produto completo, configure `DATABASE_URL` e a OAuth App seguindo o [guia de desenvolvimento](docs/DESENVOLVIMENTO.md) e o [guia do OAuth](docs/OAUTH_SETUP.md), aplique as migrations e inicie o worker em outro terminal:
 
-```bash
+```sh
+npm run db:deploy
 npm run worker:dev
 ```
 
-O worker consulta monitores vencidos a cada cinco segundos e reserva apenas as vagas disponíveis, com limite de cinco verificações por processo. Depois de concluir, agenda a próxima coleta usando o horário do banco e o intervalo configurado. Cada ciclo registra um sinal de atividade no banco. Use um `WORKER_ID` diferente para cada processo.
+O guia detalha PostgreSQL com ou sem Docker, variáveis, execução do build e diagnóstico. A interface atualiza as observações ao recarregar a página.
 
-`npm run worker:start` executa sem observar alterações de arquivos. Atualmente, exige dependências de desenvolvimento como tsx e Prisma CLI; o empacotamento de produção faz parte da entrega M4.
+## Qualidade e testes
 
-## Como usar
-
-Com as migrations aplicadas, aplicação web e worker ativos, entre pelo GitHub e cadastre um site ou endpoint público. Abra o monitor e recarregue a página para acompanhar verificações e incidentes.
-
-O código HTTP esperado começa em 200. O monitoramento usa GET em HTTP/HTTPS, portas 80/443, sem seguir redirecionamentos. Não há suporte a headers personalizados, cookies, credenciais ou corpos de requisição. A validação TLS e as restrições de destinos internos permanecem ativas.
-
-Em `/status-page`, defina título, descrição e endereço, selecione os serviços e revise seus nomes públicos. A página começa despublicada. Publicar libera `/status/seu-slug` sem login. Despublicar retorna 404; alterar o slug faz o endereço anterior retornar 404. Título, descrição e nomes públicos devem conter somente informações que você deseja compartilhar. A atualização ocorre ao recarregar a página.
-
-O seletor de tema aparece nos cabeçalhos da apresentação, login, painel e página pública. Sem escolha salva, o tema acompanha o dispositivo. A escolha manual é mantida entre visitas e sincronizada entre abas. Se o navegador bloquear o armazenamento, a troca continua funcionando durante a visita.
-
-Ao encerrar, o worker para de reservar tarefas, aguarda até 20 segundos antes de cancelar requisições ativas e espera a persistência. Após uma falha de processo, a mesma requisição HTTP pode ocorrer novamente. O controle das reservas impede duas conclusões para um único ciclo agendado; não garante uma única chamada externa.
-
-`db:deploy` aplica migrations existentes. `db:migrate` cria uma migration quando o schema muda durante o desenvolvimento. Salve schema e migration juntos; nunca altere uma migration já aplicada ou publicada.
-
-## Validação
-
-```bash
+```sh
 npm run db:validate
 npm run lint
 npm run typecheck
@@ -129,66 +90,37 @@ npm test
 npm run build
 ```
 
-A geração do cliente e o build não precisam de banco ativo nem credenciais de banco. `/api/health/ready` retorna 503 quando PostgreSQL está indisponível; `/api/health/live` pode continuar retornando 200.
+A validação da identidade visual aprovou **102 testes unitários, 44 de integração PostgreSQL/rede e 18 jornadas de navegador**, além do smoke de web e worker. [Execução correspondente no CI](https://github.com/samuelsce/LinkWatch/actions/runs/37405090355).
 
-Integração, navegador e testes de processos exigem um **banco descartável separado**, configurado exclusivamente por `TEST_DATABASE_URL`. Nunca use o banco da aplicação como substituto.
+Integração, E2E e smoke exigem um banco descartável definido explicitamente por `TEST_DATABASE_URL`. O [guia de desenvolvimento](docs/DESENVOLVIMENTO.md#testes-com-banco-descartável) fornece os comandos; a [estratégia de testes](docs/TESTING.md) explica as evidências e seus limites. O CI usa Chromium e PostgreSQL 17; isso não certifica todos os navegadores, dispositivos físicos ou capacidade em produção.
 
-Com Compose, crie o banco de testes uma vez:
+## Dados, segurança e limites
 
-```bash
-docker compose exec db psql -U linkwatch -d postgres -c "CREATE DATABASE linkwatch_test;"
-```
+- Disponibilidade observada é a proporção de verificações bem-sucedidas. Não é SLA nem medição contínua do tempo online. Zero amostras resulta em ausência de dados.
+- Latência mede o tempo até os headers; média e p95 usam somente sucessos. O corpo da resposta não é armazenado.
+- GET em HTTP/HTTPS, portas 80/443, intervalos de 1/5/15 minutos e timeout de 2 a 15 segundos. Sem seguir redirecionamentos ou enviar cookies, credenciais e headers personalizados.
+- Até dez monitores por conta por padrão. Não há rate limiting nem limite global de capacidade implementados; a meta de 100 monitores ainda precisa de teste de carga.
+- Verificações concluídas são retidas por 30 dias. Incidentes permanecem enquanto o monitor existir. O detalhe mostra até 50 verificações e 20 incidentes recentes.
+- Publicação é opcional. Despublicar ou trocar o slug invalida o endereço anterior nas requisições seguintes; conteúdo já recebido por um visitante não pode ser retirado do navegador.
+- Alertas por Discord/e-mail, equipes, cobrança e múltiplas regiões seguem fora da versão atual.
 
-No PowerShell:
+A [revisão de segurança](docs/SECURITY.md) descreve isolamento, SSRF, conteúdo armazenado, cabeçalhos e dependências. Também lista o que falta validar na hospedagem: HTTPS, proxy confiável, limites de abuso, backups e OAuth completo. O worker exige execução contínua; seu empacotamento de produção ainda faz parte do deploy.
 
-```powershell
-$env:TEST_DATABASE_URL = "postgresql://linkwatch:linkwatch@localhost:5432/linkwatch_test"
-npm run test:integration
-npm run build
-npm run test:smoke
-```
+## Documentação
 
-No macOS/Linux, defina a mesma URL com `export TEST_DATABASE_URL=...`. A integração aplica as migrations no banco de testes e remove apenas os próprios dados de teste. O teste de processos inicia e encerra uma aplicação web de produção e um worker.
+| Documento | Para quem é útil |
+| --- | --- |
+| [Guia de avaliação](docs/AVALIACAO.md) | Quem quer experimentar o produto e localizar evidências no código |
+| [Arquitetura e decisões](docs/ARCHITECTURE.md) | Quem quer entender coleta, concorrência, métricas e publicação |
+| [Desenvolvimento](docs/DESENVOLVIMENTO.md) | Quem quer executar, verificar e diagnosticar o ambiente |
+| [Produto](docs/PRODUCT.md) e [banco](docs/DATABASE.md) | Quem quer consultar regras, relações e invariantes |
+| [Segurança](docs/SECURITY.md) e [testes](docs/TESTING.md) | Quem quer avaliar proteções e validações realizadas |
+| [Contribuição](CONTRIBUTING.md) | Quem quer reportar um problema ou propor uma mudança |
+| [Índice e histórico](docs/README.md) | Quem quer acompanhar a evolução e os guias de aprendizado |
+| [Créditos](docs/CREDITOS.md) | Quem quer consultar a origem dos assets e as licenças |
 
-Para as jornadas de navegador, mantenha `TEST_DATABASE_URL` configurada:
+## Autor e processo
 
-```bash
-npm exec -- playwright install chromium
-npm run test:integration
-npm run build
-npm run test:e2e
-```
+Projeto de [@samuelsce](https://github.com/samuelsce), desenvolvido de forma incremental, com apoio de um assistente de IA no planejamento e na implementação. Os commits separam mudanças por responsabilidade; a documentação registra decisões, verificações e guias para compreender e evoluir o código.
 
-As sessões de teste são registros normais no banco; a aplicação não tem rota especial de login nem desvio de autenticação. A saída para GitHub é interceptada durante o teste. O retorno OAuth real precisa de validação manual após configurar as credenciais.
-
-A suíte cobre segurança de URLs, concorrência, isolamento, alterações de monitores, incidentes, privacidade da publicação, alteração de slug, despublicação, teclado, temas e telas estreitas. Uma jornada executa um worker separado contra um servidor HTTP isolado para observar queda e recuperação reais. Localmente usamos Edge; a CI usa Chromium e PostgreSQL 17. Consulte os resultados em [GitHub Actions](https://github.com/samuelsce/LinkWatch/actions).
-
-## Significado das métricas e limites
-
-Disponibilidade observada é a proporção de verificações bem-sucedidas sobre verificações concluídas de endpoint. Não representa disponibilidade contínua medida em tempo nem SLA. Erros operacionais e períodos sem coleta ficam fora do cálculo e são informados separadamente.
-
-Latência média e p95 usam somente sucessos. O p95 segue nearest-rank, calculado sobre todas as amostras bem-sucedidas da janela, sem usar médias dos agrupamentos. As tabelas mostram até 50 verificações e 20 incidentes; verificações expiram após 30 dias, enquanto incidentes permanecem.
-
-O gráfico agrupa em cinco minutos para 24 horas, uma hora para 7 dias e seis horas para 30 dias, alinhados em UTC. Lacunas interrompem a linha; falhas não viram sucessos com latência zero. A página pública mostra disponibilidade de 24 horas e até dez incidentes por serviço. Seleções vazias ou somente com serviços pausados não afirmam que tudo está operacional.
-
-A meta de 100 monitores e o atraso esperado do agendamento ainda precisam de teste de carga antes do deploy.
-
-## Notas sobre dependências
-
-`@eslint/compat` adapta os plugins Next.js ao ESLint 10 enquanto as versões declaradas pelos plugins ainda apontam para versões anteriores. O npm pode mostrar avisos de compatibilidade; lint e instalação limpa são verificados. As substituições de `deepmerge-ts` e `mysql2` fixam versões corrigidas de dependências da Prisma CLI. Reavalie ao atualizar essas ferramentas.
-
-O auxiliar de busca de diretórios do plugin ESLint do Next.js usa um [adaptador local com tinyglobby](tooling/next-root-glob/README.md), removendo a dependência vulnerável de braces documentada em [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm). Os presets de lint e a auditoria completa continuam ativos. Quatro testes exercitam diretórios padrão, literais, padrões e listas. Reavalie essa substituição ao atualizar Next.js.
-
-## Preparação para publicação
-
-- [x] Painel autenticado e worker implementados; login OAuth real ainda exige configuração e validação manual.
-- [x] Testes de segurança de URLs, isolamento, incidentes e concorrência.
-- [x] Instalação reproduzível e explicação da arquitetura.
-- [ ] Demonstração pública com dados de exemplo identificados.
-- [ ] Aplicação hospedada, worker saudável, backups e restauração validada.
-- [ ] Testes de capacidade e atraso do agendamento.
-- [ ] Capturas e gravação da demonstração.
-- [ ] Custos de operação documentados.
-- [ ] Licença escolhida antes da publicação do primeiro release.
-
-Números de desempenho, afirmações de uptime, badges e links de demonstração só serão publicados após validação.
+Próximos passos: configurar e validar o OAuth real, testar capacidade e limites de abuso, escolher a hospedagem, verificar backups e publicar uma demonstração. A licença geral do projeto ainda não foi escolhida; a licença da fonte incluída está preservada no repositório.
