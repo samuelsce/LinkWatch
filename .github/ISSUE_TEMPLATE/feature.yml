@@ -1,37 +1,37 @@
-name: Feature
-description: Plan a LinkWatch feature with verifiable acceptance criteria.
-title: "[Feature] "
+name: Propor funcionalidade
+description: Planeje uma funcionalidade do LinkWatch com critérios de aceite verificáveis.
+title: "[Funcionalidade] "
 body:
   - type: textarea
     id: problem
     attributes:
-      label: Problem and user outcome
-      description: Describe the user need and resulting behavior.
+      label: Problema e resultado para o usuário
+      description: Descreva a necessidade e o comportamento esperado.
     validations:
       required: true
   - type: textarea
     id: scope
     attributes:
-      label: Scope
-      description: Link the relevant product requirements and describe the implementation boundary.
+      label: Escopo
+      description: Relacione os requisitos do produto e descreva os limites da implementação.
     validations:
       required: true
   - type: textarea
     id: acceptance
     attributes:
-      label: Acceptance criteria
-      description: Use a checklist of observable outcomes.
+      label: Critérios de aceite
+      description: Use uma lista de resultados observáveis.
     validations:
       required: true
   - type: textarea
     id: validation
     attributes:
-      label: Validation
-      description: Describe the tests or manual checks appropriate to this change.
+      label: Validação
+      description: Descreva os testes ou verificações manuais adequados à mudança.
     validations:
       required: true
   - type: textarea
     id: dependencies
     attributes:
-      label: Dependencies
-      description: Link blocking issues and technical decisions.
+      label: Dependências
+      description: Vincule as issues e decisões técnicas necessárias para iniciar.

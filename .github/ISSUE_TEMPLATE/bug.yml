@@ -1,23 +1,23 @@
-name: Bug report
-description: Report a reproducible LinkWatch problem.
+name: Reportar problema
+description: Descreva um problema reproduzível no LinkWatch.
 title: "[Bug] "
 body:
   - type: textarea
     id: reproduction
     attributes:
-      label: Reproduction steps
-      description: Include environment and steps. Remove tokens, private endpoint URLs, and personal data.
+      label: Passos para reproduzir
+      description: Informe o ambiente e os passos. Remova tokens, URLs privadas e dados pessoais.
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
-      label: Expected behavior
+      label: Comportamento esperado
     validations:
       required: true
   - type: textarea
     id: actual
     attributes:
-      label: Actual behavior
+      label: Comportamento observado
     validations:
       required: true

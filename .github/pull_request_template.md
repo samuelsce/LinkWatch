@@ -1,11 +1,11 @@
-## Problem and resulting behavior
+## Problema e comportamento final
 
-Describe the concrete trigger and what changes for the user.
+Descreva o caso que motivou a mudança e o comportamento final para quem usa o produto.
 
-## Validation
+## Validação
 
-List the checks actually performed and any remaining limitations.
+Informe os checks realmente executados e as limitações que permanecem.
 
-## Related issues
+## Referências
 
-Link the relevant issue and product requirement. Use closing keywords only when the acceptance criteria are complete.
+Relacione a issue, se houver, e a regra do produto. Use palavras de fechamento somente quando todos os critérios de aceite estiverem atendidos.
