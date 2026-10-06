@@ -142,7 +142,7 @@ test("shows real stored observations, incident recovery and history windows on m
   const user = await session(context, "History test");
   const id = randomUUID();
   const now = new Date();
-  await pool.query('INSERT INTO "Monitor" (id, "ownerId", name, url, status, "lastCompletedAt", "updatedAt") VALUES ($1,$2,$3,$4,\'ONLINE\',$5,$5)', [id, user.id, "Observed service", "https://example.com/health", now]);
+  await pool.query('INSERT INTO "Monitor" (id, "ownerId", name, url, status, "lastCompletedAt", "updatedAt") VALUES ($1,$2,$3,$4,\'ONLINE\',$5,$5)', [id, user.id, "S".repeat(80), `https://example.com/health?ref=${"x".repeat(100)}`, now]);
   for (const [index, outcome] of ["FAILURE", "FAILURE", "SUCCESS"].entries()) {
     const time = new Date(now.getTime() - (3 - index) * 1000);
     await pool.query('INSERT INTO "CheckRun" (id,"monitorId","scheduledAt",revision,"startedAt","completedAt",state,outcome,"latencyMs") VALUES ($1,$2,$3,1,$3,$3,\'COMPLETED\',$4,$5)', [randomUUID(), id, time, outcome, outcome === "SUCCESS" ? 82 : null]);
@@ -201,6 +201,12 @@ test("publishes a worker-observed outage and recovery without exposing private d
     await page.keyboard.press("ArrowLeft");
     await expect(page.getByLabel("Intervalo do gráfico")).toBeFocused();
     await page.screenshot({ path: test.info().outputPath("m3-private-history.png"), fullPage: true });
+    await page.goto("/dashboard");
+    await expect(page.getByRole("link", { name: /Secret monitor label/ })).toBeVisible();
+    await page.screenshot({ path: test.info().outputPath("dashboard-desktop.png"), fullPage: true });
+    await page.setViewportSize({ width: 360, height: 800 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.screenshot({ path: test.info().outputPath("dashboard-mobile.png"), fullPage: true });
     await publicPage.setViewportSize({ width: 360, height: 800 });
     expect(await publicPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await publicPage.screenshot({ path: test.info().outputPath("m3-public-mobile.png"), fullPage: true });
