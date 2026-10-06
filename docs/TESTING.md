@@ -82,3 +82,9 @@ Esta revisão passou 102 testes unitários, 44 de integração PostgreSQL e 12 j
 A suíte de apresentação também cobre tema do dispositivo, escolha manual persistida após recarregar, navegação entre rotas, sincronização entre abas e armazenamento bloqueado. Uma jornada impede o carregamento dos arquivos JavaScript do React para comprovar que o tema salvo é aplicado pelo script inicial. O console é observado durante a navegação normal para detectar avisos de hidratação.
 
 Formulário privado em 360 px, histórico e página pública são capturados no tema escuro. A suíte atual possui 102 testes unitários, 44 de integração e 15 jornadas de navegador. Esses testes usam somente o banco descartável indicado por `TEST_DATABASE_URL`.
+
+## Revisão de segurança
+
+As três jornadas adicionais verificam cabeçalhos em páginas, endpoints de saúde, favicon e 404; bloqueio de iframe pelo navegador em outra origem; e HTML malicioso armazenado nos campos privados/publicados, incluindo `script`, `img onerror` e `svg onload`. A origem que hospeda o iframe de teste também usa loopback, para evitar que o bloqueio de acesso à rede local do navegador substitua a verificação da CSP.
+
+A suíte passa a ter 102 testes unitários, 44 de integração e 18 jornadas de navegador. Isolamento entre contas, origem externa de Server Actions, logout, privacidade e política de rede continuam cobertos pelas jornadas existentes. Resultados e limitações estão na [revisão de segurança](SECURITY.md); esses testes não substituem validação do deploy nem testes de carga.

@@ -57,6 +57,7 @@ As versões exatas estão fixadas em `package.json` e `package-lock.json`. A hos
 - [Modelo do banco](docs/DATABASE.md): entidades, relações, restrições e índices.
 - [Backlog](docs/BACKLOG.md): entregas e tarefas planejadas.
 - [Estratégia de testes](docs/TESTING.md): validação e critérios de release.
+- [Revisão de segurança](docs/SECURITY.md): proteções verificadas, correções e pendências antes do deploy público.
 - [Decisão sobre o worker](docs/adr/0001-separate-monitoring-worker.md): por que a coleta usa um processo separado.
 - [Guia da fundação](docs/LEARNING.md): estrutura inicial e evolução por commits.
 - [Guia de M1](docs/LEARNING_M1.md): autenticação, autorização e alterações de dados.
