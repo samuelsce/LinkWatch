@@ -28,9 +28,11 @@ As referências orientam decisões; a marca, a composição e os textos são pr�
 
 Estados: online `#20734D`, falha `#B33443`, atenção `#895B12`. Campos e botões secundários usam borda `#7C929E` para distinguir controles da superfície. Os tokens ficam em `src/app/globals.css`; os componentes consomem papéis como `muted`, `field`, `button-primary` e `border-soft`.
 
-Tipografia: uma família de interface do sistema, priorizando Segoe UI Variable/Segoe UI e Helvetica Neue como alternativa. Essa escolha acompanha o ambiente do usuário e dispensa download de fontes. Números das métricas e tabelas são tabulares. Títulos usam pesos moderados, sem palavras coloridas ou etiquetas decorativas em caixa alta.
+Tipografia da interface: família do sistema, priorizando Segoe UI Variable/Segoe UI e Helvetica Neue como alternativa. Essa escolha acompanha o ambiente do usuário e dispensa download de fontes para textos e controles. Números das métricas e tabelas são tabulares. Títulos usam pesos moderados, sem palavras coloridas ou etiquetas decorativas em caixa alta.
 
-O símbolo é uma linha de monitoramento, reutilizada na marca e nos favicons SVG e ICO. O SVG é a fonte visual; o ICO contém a mesma marca em 32 px. As convenções `app/icon.svg` e `app/favicon.ico` fazem o Next.js incluir os links automaticamente.
+A marca usa [Bricolage Grotesque, de Atelier Triay](https://github.com/ateliertriay/bricolage), em minúsculas, peso 750, largura 90% e tamanho óptico 32. O desenho das letras traz curvas e detalhes mais expressivos ao nome, enquanto a interface conserva sua tipografia funcional. O texto acessível continua `LinkWatch`; a apresentação em minúsculas é feita por CSS. A fonte local contém somente as letras da marca, ocupa 6.736 bytes e tem licença SIL OFL 1.1 incluída em `src/assets/fonts/`. `next/font/local` faz preload e cache, com fallback e `display: swap`, sem consultar um serviço externo durante o build ou a visita.
+
+O novo símbolo tem dois elos inclinados desenhados em SVG, associados ao nome LinkWatch. Traços arredondados, espessura consistente e espaço entre símbolo e letras formam a identidade. No cabeçalho, o desenho usa a cor de ação do tema. Os favicons reutilizam a mesma geometria em branco sobre fundo circular azul para manter contraste na aba do navegador. O SVG é a fonte visual; o ICO contém versões de 16, 32 e 48 px. As convenções `app/icon.svg` e `app/favicon.ico` fazem o Next.js incluir os links automaticamente.
 
 ## Composição e revisão
 
@@ -56,7 +58,7 @@ Formulários têm uma superfície delimitada e controles consistentes. No detalh
 
 ## Movimento e desempenho
 
-A curva ilustrativa da página inicial é desenhada uma vez, em 850 ms, por CSS/SVG. Botões respondem ao clique com deslocamento de 1 px e mudança de fundo em 140 ms. Não há loops, animações acionadas por scroll, bibliotecas novas ou fontes externas. `prefers-reduced-motion: reduce` desativa animações e transições.
+A curva ilustrativa da página inicial é desenhada uma vez, em 850 ms, por CSS/SVG. Botões respondem ao clique com deslocamento de 1 px e mudança de fundo em 140 ms. Não há loops, animações acionadas por scroll ou novas bibliotecas de interface. A única fonte baixada pelo navegador é o recorte local de 6,7 KB usado na marca. `prefers-reduced-motion: reduce` desativa animações e transições.
 
 A página inicial continua estática no build. O SVG ilustrativo é renderizado no servidor; o gráfico do histórico mantém apenas a interação já existente. Isso limita o custo acrescentado pela revisão visual. Não medimos Lighthouse/Core Web Vitals em produção; avaliação de rede, carga e dispositivos reais continua parte da entrega de deploy.
 
@@ -83,7 +85,7 @@ O seletor aparece nos cabeçalhos da apresentação, login, painel e página pú
 | Ação | `#136582` | `#83C9E3` |
 | Divisor | `#D9E2E7` | `#344651` |
 
-Bordas de controles, fundo do login, mensagens, botões, legendas e marcas do gráfico também usam tokens. No tema escuro, o botão principal tem texto escuro sobre azul claro para manter o contraste. O símbolo da marca mantém sua cor original.
+Bordas de controles, fundo do login, mensagens, botões, legendas e marcas do gráfico também usam tokens. No tema escuro, o botão principal tem texto escuro sobre azul claro para manter o contraste. O símbolo da marca acompanha a cor de ação: azul petróleo no tema claro e azul claro no escuro.
 
 O layout raiz executa um script pequeno e estático no cabeçalho, antes da primeira pintura, para aplicar `data-theme` sem esperar o React. Essa técnica segue o guia `preventing-flash-before-hydration.md` da documentação da versão instalada do Next.js. A supressão de aviso de hidratação fica restrita ao elemento HTML, cujo atributo é ajustado pelo script. O componente do seletor reaplica a preferência antes da pintura após montagens e sincroniza eventos; não adiciona biblioteca nem torna a página inicial dinâmica.
 
