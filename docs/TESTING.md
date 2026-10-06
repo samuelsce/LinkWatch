@@ -1,6 +1,6 @@
 # Estratégia de testes e release
 
-M3 inclui 98 testes unitários, 44 de integração PostgreSQL/rede e 10 jornadas de navegador, além de smoke de web/worker. Executar `npm test`, `npm run test:integration`, `npm run test:e2e` e `npm run test:smoke` conforme o README. CI está em `.github/workflows/ci.yml`. Sessões E2E usam o banco normal, sem bypass no app. OAuth real requer smoke manual após configuração. Capacidade, restore e deploy continuam planejados para M4.
+M3 inclui 102 testes unitários, 44 de integração PostgreSQL/rede e 10 jornadas de navegador, além de smoke de web/worker. Executar `npm test`, `npm run test:integration`, `npm run test:e2e` e `npm run test:smoke` conforme o README. CI está em `.github/workflows/ci.yml`. Sessões E2E usam o banco normal, sem bypass no app. OAuth real requer smoke manual após configuração. Capacidade, restore e deploy continuam planejados para M4.
 
 ## Evidências de M3
 
@@ -11,6 +11,7 @@ M3 inclui 98 testes unitários, 44 de integração PostgreSQL/rede e 10 jornadas
 - Processo worker em tests/fixtures/worker-harness.ts executa o mesmo runtime/loop da aplicação contra um servidor HTTP isolado. O teste acelera a espera e mapeia o transporte por código de fixture, sem variável de produção que libere destinos locais. TEST_DATABASE_URL é obrigatório e independente de DATABASE_URL.
 - Navegador acompanha online → instável → offline → recuperado e confirma os estados públicos sem sessão. Troca de slug e despublicação retornam HTTP 404; formulário adulterado não publica monitor estrangeiro.
 - Gráfico navegável por teclado, tabela alternativa, filtros de período e telas mobile de 360 px. Screenshots locais são artefatos de teste, não uma demo de produção.
+- Correção de tooling após auditoria: adaptador tinyglobby limitado ao helper de diretórios do plugin Next, preservando os presets. Quatro testes exercitam a API real do helper; instalação limpa e auditoria completa devem passar. Reavaliar o override em upgrades do Next.
 
 ## Evidências de M2
 

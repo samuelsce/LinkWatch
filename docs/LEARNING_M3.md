@@ -46,6 +46,8 @@ O harness é um arquivo dentro de tests/, executado em processo separado. Ele in
 
 ## Como estudar o código
 
+O CI também encontrou uma dependência vulnerável do lint: braces, sem versão corrigida no momento da entrega. Um adaptador local substitui somente a API de glob de diretórios usada pelo plugin Next por tinyglobby. Preservamos os presets e a auditoria, e testamos o helper real em quatro configurações. Leia tooling/next-root-glob/README.md; esse override deve ser reavaliado ao atualizar o Next. A instalação limpa pelo lockfile faz parte da validação.
+
 Leia `src/features/monitors/history.ts` → `src/components/latency-chart.tsx` para o gráfico. Para publicação: `src/app/(private)/status-page/actions.ts` → `src/features/status-pages/service.ts`. Para privacidade: `src/features/status-pages/public.ts` → `src/app/status/[slug]/page.tsx`.
 
 Compare os commits com `git log --oneline` e `git show <commit>`. Os testes de banco estão em `tests/integration/status-pages.test.ts`; a jornada completa está em `tests/e2e/monitors.spec.ts`. A próxima entrega é operação: escolher hospedagem, validar capacidade, backup/restore e publicar a demo.

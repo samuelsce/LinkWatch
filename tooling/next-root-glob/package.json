@@ -1,0 +1,9 @@
+{
+  "name": "fast-glob",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "engines": { "node": "^24.0.0" },
+  "dependencies": { "tinyglobby": "0.2.17" }
+}

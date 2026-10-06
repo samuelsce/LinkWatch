@@ -4,7 +4,10 @@
   "private": true,
   "overrides": {
     "deepmerge-ts": "8.0.2",
-    "mysql2": "3.24.5"
+    "mysql2": "3.24.5",
+    "@next/eslint-plugin-next": {
+      "fast-glob": "$fast-glob"
+    }
   },
   "type": "module",
   "engines": {
@@ -44,6 +47,7 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "fast-glob": "file:tooling/next-root-glob",
     "@eslint/compat": "2.1.1",
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "4.3.3",
