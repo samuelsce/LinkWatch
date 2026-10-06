@@ -16,10 +16,10 @@ export default async function MonitorDetail({ params, searchParams }: { params: 
   const history = await monitorHistory(getDatabase(), monitor.ownerId, id, hours);
   return (
     <>
-      <Link href="/dashboard" className="text-sm text-sky-400">← Seus monitores</Link>
-      <div className="mt-6 flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-3xl font-semibold break-words">{monitor.name}</h1><p className="mt-3 text-sm break-all text-slate-400">{monitor.url}</p><div className="mt-4"><MonitorStatus monitor={monitor} now={now} /></div></div><Link href={`/monitors/${id}/edit`} className="rounded-lg border border-slate-600 px-4 py-2 hover:bg-slate-800">Editar monitor</Link></div>
-      <dl className="mt-8 grid gap-4 sm:grid-cols-3">
-        {[ ["Intervalo", `${monitor.intervalSeconds / 60} minutos`], ["Timeout", `${monitor.timeoutMs / 1000} segundos`], ["HTTP esperado", monitor.expectedStatus] ].map(([label, value]) => <div key={label} className="rounded-xl border border-slate-800 bg-slate-900/60 p-5"><dt className="text-sm text-slate-400">{label}</dt><dd className="mt-3 text-xl font-semibold">{value}</dd></div>)}
+      <Link href="/dashboard" className="text-sm link">Voltar aos monitores</Link>
+      <div className="mt-6 flex flex-wrap items-start justify-between gap-4"><div className="min-w-0 max-w-full"><h1 className="text-3xl font-semibold break-words">{monitor.name}</h1><p className="mt-3 text-sm break-all muted">{monitor.url}</p><div className="mt-4"><MonitorStatus monitor={monitor} now={now} /></div></div><Link href={`/monitors/${id}/edit`} className="button-secondary px-4 py-2">Editar monitor</Link></div>
+      <dl className="mt-8 grid gap-4 border-y border-soft py-6 sm:grid-cols-3">
+        {[ ["Intervalo", `${monitor.intervalSeconds / 60} minutos`], ["Timeout", `${monitor.timeoutMs / 1000} segundos`], ["HTTP esperado", monitor.expectedStatus] ].map(([label, value]) => <div key={label} className="px-1"><dt className="text-sm muted">{label}</dt><dd className="mt-3 text-xl font-semibold">{value}</dd></div>)}
       </dl>
       <MonitorHistory id={id} hours={hours} history={history} />
       <MonitorControls id={id} updatedAt={monitor.updatedAt.toISOString()} enabled={monitor.enabled} />
