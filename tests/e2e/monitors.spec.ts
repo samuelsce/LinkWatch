@@ -102,11 +102,14 @@ test("logout removes the database session and rejects its old cookie", async ({ 
   expect(response.headers().location).toBe("/login");
 });
 
-test("mobile form has labels and fits a narrow viewport", async ({ page, context }) => {
+test("mobile form has labels and fits a narrow viewport", async ({ page, context }, info) => {
   await session(context, "Mobile test");
+  await page.emulateMedia({ colorScheme: "dark" });
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto("/monitors/new");
   await expect(page.getByLabel("URL pública")).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.screenshot({ path: info.outputPath("monitor-form-dark-mobile.png"), fullPage: true });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
@@ -201,6 +204,9 @@ test("publishes a worker-observed outage and recovery without exposing private d
     await page.keyboard.press("ArrowLeft");
     await expect(page.getByLabel("Intervalo do gráfico")).toBeFocused();
     await page.screenshot({ path: test.info().outputPath("m3-private-history.png"), fullPage: true });
+    await page.getByRole("button", { name: "Alternar tema" }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await page.screenshot({ path: test.info().outputPath("history-dark-desktop.png"), fullPage: true, animations: "disabled" });
     await page.goto("/dashboard");
     await expect(page.getByRole("link", { name: /Secret monitor label/ })).toBeVisible();
     await page.screenshot({ path: test.info().outputPath("dashboard-desktop.png"), fullPage: true });
@@ -210,6 +216,9 @@ test("publishes a worker-observed outage and recovery without exposing private d
     await publicPage.setViewportSize({ width: 360, height: 800 });
     expect(await publicPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await publicPage.screenshot({ path: test.info().outputPath("m3-public-mobile.png"), fullPage: true });
+    await publicPage.getByRole("button", { name: "Alternar tema" }).click();
+    await expect(publicPage.locator("html")).toHaveAttribute("data-theme", "dark");
+    await publicPage.screenshot({ path: test.info().outputPath("status-dark-mobile.png"), fullPage: true, animations: "disabled" });
     await page.goto("/status-page");
     const newSlug = `renamed-${randomUUID()}`;
     await page.getByLabel("Slug público", { exact: true }).fill(newSlug);
