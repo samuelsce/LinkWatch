@@ -1,6 +1,10 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { test, expect, type BrowserContext } from "@playwright/test";
 import { Pool } from "pg";
+import { spawn } from "node:child_process";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
+import { once } from "node:events";
 
 const pool = new Pool({ connectionString: process.env.TEST_DATABASE_URL });
 const owners: string[] = [];
@@ -153,4 +157,89 @@ test("shows real stored observations, incident recovery and history windows on m
   await expect(page).toHaveURL(/hours=168$/);
   await expect(page.getByRole("link", { name: "7 dias", exact: true })).toHaveAttribute("aria-current", "page");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test("publishes a worker-observed outage and recovery without exposing private data", async ({ page, context, browser }) => {
+  test.setTimeout(60000);
+  const user = await session(context, "Hidden owner identity");
+  const monitorId = randomUUID();
+  const slug = `public-${randomUUID()}`;
+  let responseStatus = 200;
+  const fixture = createServer((_request, response) => { response.writeHead(responseStatus); response.end("fixture"); });
+  await new Promise<void>((resolve) => fixture.listen(0, "127.0.0.1", resolve));
+  const visitor = await browser.newContext();
+  const publicPage = await visitor.newPage();
+  await pool.query('INSERT INTO "Monitor" (id,"ownerId",name,url,"intervalSeconds","timeoutMs","updatedAt") VALUES ($1,$2,$3,$4,60,2000,NOW())', [monitorId, user.id, "Secret monitor label", "http://fixture.example.com/health?token=hidden-query-secret"]);
+  const worker = spawn(process.execPath, ["--import", "tsx", "tests/fixtures/worker-harness.ts"], { windowsHide: true, stdio: "ignore", env: { ...process.env, TEST_DATABASE_URL: process.env.TEST_DATABASE_URL!, LINKWATCH_FIXTURE_PORT: String((fixture.address() as AddressInfo).port), WORKER_ID: `e2e-${randomUUID()}` } });
+  try {
+    await page.goto("/status-page");
+    await expect(page.getByLabel("Publicar página de status", { exact: true })).not.toBeChecked();
+    await page.getByLabel("Título", { exact: true }).fill("Our services");
+    await page.getByLabel("Slug público", { exact: true }).fill(slug);
+    await page.getByRole("checkbox", { name: "Secret monitor label", exact: true }).check();
+    await page.getByLabel("Nome público de Secret monitor label", { exact: true }).fill("Public API");
+    await page.getByLabel("Publicar página de status", { exact: true }).check();
+    await page.getByRole("button", { name: "Salvar página de status", exact: true }).click();
+    await expect(page.getByRole("link", { name: "Abrir página pública" })).toBeVisible();
+    for (const [index, state] of ["ONLINE", "UNSTABLE", "OFFLINE", "ONLINE"].entries()) {
+      responseStatus = index === 1 || index === 2 ? 503 : 200;
+      if (index) await pool.query('UPDATE "Monitor" SET "nextCheckAt" = NOW() WHERE id = $1', [monitorId]);
+      await expect.poll(async () => (await pool.query('SELECT status FROM "Monitor" WHERE id = $1', [monitorId])).rows[0].status, { timeout: 15000 }).toBe(state);
+      await page.goto(`/monitors/${monitorId}`);
+      await expect(page.getByRole("img", { name: "Gráfico de latência média com marcas de falhas e erros de coleta" })).toBeVisible();
+      const result = await publicPage.goto(`/status/${slug}`);
+      expect(result?.status()).toBe(200);
+      await expect(publicPage.getByRole("heading", { name: "Public API", exact: true })).toBeVisible();
+      if (state === "OFFLINE") await expect(publicPage.getByRole("heading", { name: "Há serviços indisponíveis" })).toBeVisible();
+      if (state === "UNSTABLE") await expect(publicPage.getByRole("heading", { name: "Há serviços instáveis ou sem dados recentes" })).toBeVisible();
+    }
+    await publicPage.getByText("Incidentes recentes", { exact: true }).click();
+    await expect(publicPage.getByText("Recuperado", { exact: true })).toBeVisible();
+    const html = await publicPage.content();
+    for (const hidden of [user.id, monitorId, "Hidden owner identity", "Secret monitor label", "hidden-query-secret", "fixture.example.com"]) expect(html).not.toContain(hidden);
+    await page.getByLabel("Intervalo do gráfico").focus();
+    await page.keyboard.press("ArrowLeft");
+    await expect(page.getByLabel("Intervalo do gráfico")).toBeFocused();
+    await page.screenshot({ path: test.info().outputPath("m3-private-history.png"), fullPage: true });
+    await publicPage.setViewportSize({ width: 360, height: 800 });
+    expect(await publicPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await publicPage.screenshot({ path: test.info().outputPath("m3-public-mobile.png"), fullPage: true });
+    await page.goto("/status-page");
+    const newSlug = `renamed-${randomUUID()}`;
+    await page.getByLabel("Slug público", { exact: true }).fill(newSlug);
+    await page.getByRole("button", { name: "Salvar página de status", exact: true }).click();
+    await expect(page.getByRole("link", { name: "Abrir página pública" })).toHaveAttribute("href", `/status/${newSlug}`);
+    expect((await publicPage.goto(`/status/${slug}`))?.status()).toBe(404);
+    expect((await publicPage.goto(`/status/${newSlug}`))?.status()).toBe(200);
+    await page.getByLabel("Publicar página de status", { exact: true }).uncheck();
+    await page.getByRole("button", { name: "Salvar página de status", exact: true }).click();
+    await expect(page.getByText("Despublicada", { exact: false })).toBeVisible();
+    expect((await publicPage.goto(`/status/${newSlug}`))?.status()).toBe(404);
+  } finally {
+    const exit = once(worker, "exit"); worker.kill("SIGTERM");
+    const force = setTimeout(() => worker.kill("SIGKILL"), 5000);
+    if (worker.exitCode === null && worker.signalCode === null) await exit;
+    clearTimeout(force);
+    await visitor.close(); fixture.closeAllConnections();
+    await new Promise<void>((resolve) => fixture.close(() => resolve()));
+  }
+});
+
+test("rejects foreign monitor selection through the actual publication form", async ({ page, context }) => {
+  const user = await session(context, "Publication isolation");
+  const foreignId = randomUUID();
+  const other = randomUUID(); owners.push(other);
+  await pool.query('INSERT INTO "User" (id) VALUES ($1)', [other]);
+  await pool.query('INSERT INTO "Monitor" (id,"ownerId",name,url,"updatedAt") VALUES ($1,$2,$3,$4,NOW())', [foreignId, other, "Foreign selection", "https://example.com/secret"]);
+  await page.goto("/status-page");
+  await page.getByLabel("Título", { exact: true }).fill("Attempt");
+  await page.getByLabel("Slug público", { exact: true }).fill(`attempt-${randomUUID()}`);
+  await page.locator("main form").evaluate((form, id) => {
+    for (const [name, value] of [["monitorId", id], [`publicName:${id}`, "Hijacked"]]) {
+      const input = document.createElement("input"); input.type = "hidden"; input.name = name!; input.value = value!; form.append(input);
+    }
+  }, foreignId);
+  await page.getByRole("button", { name: "Salvar página de status", exact: true }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Seleção de monitores inválida" })).toBeVisible();
+  expect((await pool.query('SELECT id FROM "StatusPage" WHERE "ownerId" = $1', [user.id])).rowCount).toBe(0);
 });
