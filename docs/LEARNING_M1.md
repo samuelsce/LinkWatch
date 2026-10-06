@@ -1,5 +1,7 @@
 # Aprendendo com M1: acesso e cadastro
 
+Registro histórico da entrega M1. Os itens descritos como futuros se referem àquele momento. O comportamento atual está no [índice da documentação](README.md) e no [guia de desenvolvimento](DESENVOLVIMENTO.md).
+
 Esta entrega liga o banco à interface. O usuário entra com GitHub e gerencia apenas os próprios monitores. As requisições periódicas aos endpoints ainda não existem: o worker continua registrando heartbeat.
 
 ## Autenticação e autorização

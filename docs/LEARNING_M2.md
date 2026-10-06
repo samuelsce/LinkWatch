@@ -1,5 +1,7 @@
 # Aprendendo com M2: coleta e incidentes
 
+Registro histórico da entrega M2. Para configurar e avaliar a versão atual, consulte o [índice da documentação](README.md) e o [guia de desenvolvimento](DESENVOLVIMENTO.md).
+
 Nesta entrega, o monitor deixa de ser apenas um cadastro: um processo Node faz GET periodicamente, grava a observação e mantém o incidente. A página lê esses registros; fechar o navegador não interrompe o worker.
 
 ## Caminho de uma verificação

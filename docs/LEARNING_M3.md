@@ -1,5 +1,7 @@
 # Aprendendo com M3: gráficos e status público
 
+Registro histórico da entrega M3. A interface, a marca e os testes receberam revisões posteriores, documentadas no [índice](README.md), no [design](DESIGN.md) e na [revisão de segurança](SECURITY.md).
+
 A coleta da M2 já gravava os dados. M3 apresenta essas observações e permite compartilhar uma seleção dos serviços. Não foi preciso mudar o schema: StatusPage e StatusPageMonitor estavam nas migrations iniciais e agora são usados pela aplicação.
 
 ## Como os dados viram gráfico

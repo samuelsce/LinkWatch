@@ -1,5 +1,7 @@
 # Aprendendo com a fundação do LinkWatch
 
+Registro histórico da entrega M0. O texto descreve o estado naquele momento. Para executar ou avaliar a versão atual, consulte o [índice da documentação](README.md) e o [guia de desenvolvimento](DESENVOLVIMENTO.md).
+
 Esta entrega é M0: preparar uma base executável e verificável. Login e monitoramento real entram depois. O objetivo é entender cada camada antes de juntar as funcionalidades.
 
 ## O que cada commit representa
