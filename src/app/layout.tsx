@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "LinkWatch — Monitor de sites e APIs",
+  title: "LinkWatch | Monitor de sites e APIs",
   description: "Acompanhe disponibilidade, latência e incidentes dos seus serviços.",
 };
 

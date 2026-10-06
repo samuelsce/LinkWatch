@@ -23,7 +23,7 @@ export async function saveStatusPage(_state: StatusFormState, form: FormData): P
     if (previous && previous.slug !== page.slug) revalidatePath(`/status/${previous.slug}`);
     return { message: "Página de status salva.", success: true };
   } catch (error) {
-    if (error instanceof z.ZodError) return { message: "Confira título, slug e nomes públicos. Use um slug de 3–80 letras minúsculas, números e hífens." };
+    if (error instanceof z.ZodError) return { message: "Confira título, slug e nomes públicos. Use um slug de 3 a 80 letras minúsculas, números e hífens." };
     if (error instanceof StatusPageError) return { message: {
       NOT_FOUND: "Seleção de monitores inválida.", CONFLICT: "A configuração foi alterada. Recarregue antes de salvar.", SLUG_TAKEN: "Este slug já está em uso. Escolha outro.",
     }[error.code] };
