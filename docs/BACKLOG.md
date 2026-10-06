@@ -1,46 +1,45 @@
-# Backlog pronto para GitHub
+# Estado das entregas e próximos passos
 
-Issues propostas para [samuelsce/LinkWatch](https://github.com/samuelsce/LinkWatch); nenhuma foi criada no GitHub. A criação remota depende de acesso autenticado à conta. Números abaixo são IDs de planejamento, não números reais de issues.
+As entregas de fundação, acesso, coleta e publicação estão implementadas. Deploy, capacidade, OAuth real e alertas permanecem pendentes. Este documento diferencia implementação, evidência disponível e próximos critérios de aceite.
 
-## GitHub Project proposto
+Os IDs `LW-xx` são identificadores internos de planejamento; não são números de issues do GitHub. O quadro e as labels abaixo são uma proposta de organização, não uma afirmação de que existe um GitHub Project configurado.
 
-Nome: LinkWatch: Product & Engineering. Colunas: Backlog, Ready, In progress, In review, Done. Campos: Priority (P0/P1/P2), Milestone, Area (web/worker/data/docs/ops) e Size (S/M/L). Labels: feature, bug, security, tests, documentation e infrastructure.
+## Entregas implementadas
 
-“Ready” exige escopo, critérios de aceite e dependências resolvidas. “Done” exige código revisável, testes aplicáveis e documentação atualizada. Preferir PRs por entrega coerente.
+| IDs | Entrega | Evidência |
+| --- | --- | --- |
+| LW-01 a LW-03 | Fundação: Next.js/TypeScript, PostgreSQL/Prisma, migrations, worker e CI | Scripts reproduzíveis, três migrations em banco vazio e smoke de processos |
+| LW-04 e LW-05 | Acesso e gestão de monitores | Sessões de banco, CRUD, limites concorrentes e isolamento entre contas; OAuth completo pendente |
+| LW-06 a LW-09 | Probe, scheduler, incidentes, métricas e retenção | DNS/IP/TLS, reservas e resultados antigos, ciclo transacional, p95 e limpeza |
+| LW-10 a LW-12 | Dashboard, gráficos, status público e E2E com worker | Visitante sem sessão, projeção restrita, queda/recuperação, slug e despublicação |
+| Parte de LW-14 | Apresentação do portfólio | README, guia de avaliação, capturas locais, temas, identidade e revisão de segurança |
 
-## Issues
+Os [testes](TESTING.md), o [guia de avaliação](AVALIACAO.md) e o histórico Git permitem conferir esses resultados. As capturas são locais e identificam registros fictícios; não encerram o critério de demo hospedada de LW-14.
 
-| ID | Título | Prioridade / marco | Depende de | Aceite |
-| --- | --- | --- | --- | --- |
-| LW-01 | Scaffold Next.js/TypeScript e entrypoint do worker | P0 / M0 |: | Scripts dev/build/lint/typecheck; lockfile; worker separado; versões compatíveis |
-| LW-02 | PostgreSQL, Prisma e migrations iniciais | P0 / M0 | LW-01 | Schema implementado, índices/restrições, banco local e migration em banco vazio |
-| LW-03 | CI e instruções reproduzíveis | P0 / M0 | LW-01, LW-02 | Checks executam e README funciona em checkout limpo |
-| LW-04 | Login GitHub e isolamento por proprietário | P0 / M1 | LW-02 | Sessão, logout, consultas/mutations isoladas e testes com dois usuários |
-| LW-05 | Cadastro e gestão de monitores | P0 / M1 | LW-04 | Regras R02, estados vazios, limites concorrentes, pausa/revisão |
-| LW-06 | Probe HTTP seguro e classificação de resultados | P0 / M2 | LW-01 | Timeout, TLS, SSRF, DNS pinning, sem redirects e testes isolados |
-| LW-07 | Scheduler com leases e recuperação | P0 / M2 | LW-02, LW-06 | Reservas concorrentes, fencing, heartbeat e shutdown verificados |
-| LW-08 | Transições de estado e incidentes | P0 / M2 | LW-05, LW-07 | Regras R04 e persistência transacional sem incidente duplicado |
-| LW-09 | Métricas, agregação e retenção | P1 / M2 | LW-07 | Regras R05, zero dados, p95 correto, limpeza em lotes e testes |
-| LW-10 | Dashboard e detalhe com gráficos | P1 / M3 | LW-05, LW-08, LW-09 | Dados reais, teclado/mobile, falhas/lacunas no gráfico e estados de erro |
-| LW-11 | Configuração e página pública de status | P1 / M3 | LW-08, LW-09 | Seleção explícita, slug, projeção pública e isolamento testado |
-| LW-12 | E2E do ciclo de queda e recuperação | P0 / M3 | LW-10, LW-11 | Fixture controlado verifica jornada completa com worker ativo |
-| LW-13 | Deploy, health e backup/restore | P0 / M4 | LW-03, LW-12 | Provedor definido, serviços ativos, smoke test e restore documentados |
-| LW-14 | README final, screenshots e demo | P1 / M4 | LW-13 | Evidências reais, setup validado, limitações e decisão de licença |
-| LW-15 | Outbox e alertas Discord | P1 / M5 | LW-08, LW-13 | Eventos únicos, segredo protegido, backoff e falha de envio isolada |
-| LW-16 | Alertas por e-mail | P2 / M5 | LW-15 | Provedor configurado, destinatário verificado e entregas testadas |
+## Próximas entregas
 
-## Ordem inicial
+| ID | Prioridade | Trabalho pendente | Critério de aceite |
+| --- | --- | --- | --- |
+| LW-13 | P0 | Configuração OAuth real, limites de abuso/capacidade, empacotamento, deploy e backup | Login completo validado; limites definidos e testados; web/worker/banco ativos; smoke, backup e restauração documentados |
+| LW-14 | P1 | Demonstração pública e fechamento do portfólio | Demo hospedada com dados identificados, capturas do ambiente, custos documentados, instalação limpa e licença geral escolhida |
+| LW-15 | P1 | Outbox e alertas Discord | Evento/canal único, segredo protegido, backoff, deduplicação e falha de envio isolada da coleta |
+| LW-16 | P2 | Alertas por e-mail | Provedor configurado, destinatário verificado e entregas testadas |
 
-Status da entrega M0: LW-01, LW-02 e LW-03 implementadas. Schema, migrations, web, worker com heartbeat e CI estão versionados; README e guia de aprendizado documentam o ambiente. A validação local passou; o resultado remoto de CI é consultado em GitHub Actions. Os IDs continuam sendo de planejamento; não equivalem a issues criadas.
+### Sequência antes de publicar
 
-Status M1: implementação de LW-04/LW-05 disponível, com sessões, CRUD, limites e isolamento validados em PostgreSQL e navegador. O smoke OAuth real permanece pendente da criação/configuração da OAuth App local.
+1. Configurar a OAuth App e executar o retorno real conforme [OAUTH_SETUP.md](OAUTH_SETUP.md).
+2. Definir rate limiting, acesso ao demo e capacidade global; medir atraso do worker e crescimento do banco.
+3. Escolher hospedagem compatível com worker contínuo e empacotar os processos.
+4. Configurar HTTPS, host/proxy, secrets, rede e papéis do banco conforme [SECURITY.md](SECURITY.md).
+5. Testar backup/restore, executar smoke e validar isolamento/publicação no domínio público.
+6. Publicar a demonstração e registrar links, custos, licença e evidências reais no README.
 
-Status M2: LW-06 a LW-09 implementadas: probe HTTP/TLS seguro, leases e fencing, incidentes transacionais, métricas UTC e retenção em lotes. Histórico básico foi conectado ao detalhe para conferir os resultados; gráficos, publicação e E2E com worker + navegador permanecem LW-10 a LW-12. Testes não comprovam ainda a meta de capacidade/atraso de 100 monitores.
+Alertas dependem de incidentes confiáveis e operação validada. Equipes, cobrança e múltiplas regiões continuam fora do escopo inicial.
 
-Status M3: LW-10 a LW-12 implementadas: resumo privado, gráfico interativo com lacunas, configuração/publicação, DTO público restrito e jornada E2E com processo worker, fixture HTTP e visitante anônimo. Próximas: LW-13/LW-14 (deploy, backup/restore, capacidade e evidências de portfólio). OAuth real ainda precisa de credenciais e smoke manual. Os IDs continuam sendo planejamento, não issues remotas.
+## Organização proposta no GitHub
 
-Começar por LW-01 a LW-03. Depois acesso/cadastro; em seguida um ciclo vertical com probe + scheduler + incidente. Só então gráficos, publicação e deploy. Alertas dependem de incidentes confiáveis.
+Quadro: **LinkWatch: Product & Engineering**. Colunas: Backlog, Ready, In progress, In review e Done. Campos: prioridade, entrega, área e tamanho. Labels: feature, bug, security, tests, documentation e infrastructure.
 
-## Corpo sugerido das issues
+Uma tarefa fica pronta para execução quando tem escopo, aceite e dependências definidos. Considerar concluída somente após implementação, validação aplicável e documentação atualizada. Preferir mudanças revisáveis por responsabilidade.
 
-Usar o template de feature em `.github/ISSUE_TEMPLATE/feature.yml`. Para cada ID acima, incluir os requisitos correspondentes em `docs/PRODUCT.md`, detalhar o aceite em checklist e vincular dependências com números reais após criação. Não transformar um marco inteiro em uma única issue.
+Para abrir issues, usar os [templates](../.github/ISSUE_TEMPLATE/feature.yml), relacionar as regras de [PRODUCT.md](PRODUCT.md) e vincular dependências com números reais. Não usar `LW-xx` como se fosse uma issue existente nem fechar um marco inteiro com um único critério genérico.

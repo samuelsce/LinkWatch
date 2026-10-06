@@ -12,9 +12,6 @@ erDiagram
   User ||--o| StatusPage : publica
   StatusPage ||--o{ StatusPageMonitor : seleciona
   Monitor ||--o{ StatusPageMonitor : aparece
-  User ||--o{ NotificationChannel : configura
-  Incident ||--o{ NotificationDelivery : gera
-  NotificationChannel ||--o{ NotificationDelivery : recebe
 ```
 
 ## Entidades do MVP
@@ -23,7 +20,8 @@ erDiagram
 | --- | --- | --- |
 | User | id, name, email?, image?, createdAt | Identidade do proprietário; email não obrigatório para GitHub |
 | Account | campos exigidos pelo adapter de autenticação | Único provider/providerAccountId; tokens nunca públicos |
-| Session | sessionToken, userId, expires | Conforme estratégia e adapter; validar schema no scaffold |
+| Session | sessionToken, userId, expires | Sessões de banco do Auth.js; expiração e exclusão no logout |
+| VerificationToken | identifier, token, expires | Estrutura do adapter; não há fluxo de login por e-mail na versão atual |
 | Monitor | id, ownerId, name, url, expectedStatus, intervalSeconds, timeoutMs, enabled, status, configRevision, consecutiveFailures, firstFailureAt?, lastCompletedAt?, nextCheckAt, leaseToken?, leaseUntil?, createdAt, updatedAt | URL privada; lease ativa aponta para a execução corrente |
 | CheckRun | id, monitorId, scheduledAt, revision, startedAt?, completedAt?, state, leaseToken?, attemptCount, outcome?, httpStatus?, latencyMs?, errorCode? | Estado QUEUED/RUNNING/COMPLETED; outcome SUCCESS/FAILURE/COLLECTOR_ERROR/BLOCKED |
 | Incident | id, monitorId, startedAt, confirmedAt, endedAt?, endReason?, failureCode, createdAt | endReason RECOVERED/CONFIG_CHANGED; endedAt nulo indica aberto |
@@ -32,20 +30,20 @@ erDiagram
 | WorkerHeartbeat | workerId, lastSeenAt, version | Diagnóstico de coleta, não disponibilidade monitorada |
 | MaintenanceLease | name, token, expiresAt | Exclusão mútua para limpeza diária |
 
-No schema de autenticação, seguir o adapter escolhido; não inventar um modelo incompatível com o provider. Se a estratégia for JWT, Session pode ser dispensada com decisão documentada.
+A autenticação usa o adapter Prisma do Auth.js e sessões persistidas no banco. A estrutura foi validada pelos [testes do adapter](../tests/integration/auth-adapter.test.ts). NotificationChannel e NotificationDelivery não fazem parte do schema atual; estão descritas separadamente como planejamento de alertas.
 
 ## Restrições e índices
 
 - Monitor: CHECK intervalSeconds IN (60, 300, 900), timeoutMs BETWEEN 2000 AND 15000, expectedStatus BETWEEN 200 AND 599, consecutiveFailures >= 0.
 - Monitor: índice ownerId/createdAt e índice parcial nextCheckAt para enabled = true.
 - CheckRun: UNIQUE (monitorId, scheduledAt); índice (monitorId, completedAt DESC), índice completedAt para retenção e state/lease para recuperação.
-- M2 adiciona migration com índice único parcial por monitor enquanto state <> COMPLETED. Recuperação reutiliza a mesma execução e troca seu token; não cria um segundo ciclo ativo.
+- A terceira migration adiciona índice único parcial por monitor enquanto state <> COMPLETED. Recuperação reutiliza a mesma execução e troca seu token; não cria um segundo ciclo ativo.
 - CheckRun: completedAt e outcome obrigatórios quando state = COMPLETED. latencyMs não negativo se preenchido; erro interno não pode ser SUCCESS/FAILURE.
 - Incident: índice (monitorId, startedAt DESC); índice único parcial monitorId WHERE endedAt IS NULL. endedAt >= startedAt e endReason obrigatório em incidentes encerrados.
 - StatusPage: UNIQUE ownerId e UNIQUE slug.
 - StatusPageMonitor: chave composta (statusPageId, monitorId); posição não negativa.
 - Todas as FKs de histórico e publicação fazem cascade ao excluir monitor. Exclusão de usuário remove dados próprios conforme fluxo futuro de conta.
-- A seleção pública usa FKs compostas com ownerId: o banco rejeita associações entre donos diferentes. A aplicação também deverá validar propriedade antes de publicar; o comportamento do banco já possui teste de integração.
+- A seleção pública usa FKs compostas com ownerId: o banco rejeita associações entre donos diferentes. A aplicação também valida propriedade antes de publicar; ambos os caminhos têm testes de integração e navegador.
 
 ## Transações críticas
 
@@ -63,4 +61,4 @@ No schema de autenticação, seguir o adapter escolhido; não inventar um modelo
 
 NotificationChannel: id, ownerId, type DISCORD/EMAIL, enabled, destino protegido, createdAt. NotificationDelivery: id, incidentId, channelId, event OPENED/RECOVERED, status PENDING/SENT/FAILED, attempts, nextAttemptAt, sentAt?, sanitizedError?. UNIQUE (incidentId, channelId, event).
 
-O evento é inserido na mesma transação que abre/resolve o incidente. O worker de entregas reserva itens, envia e registra resultado. Não incluir tabelas ou integrações de alertas na primeira migration se não forem utilizadas.
+Na proposta futura, o evento será inserido na mesma transação que abre/resolve o incidente. Um worker de entregas reservará itens, enviará e registrará o resultado. Essa outbox e as tabelas de alertas ainda não existem; serão introduzidas com novas migrations quando a funcionalidade for implementada.

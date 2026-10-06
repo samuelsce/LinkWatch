@@ -1,12 +1,12 @@
 # ADR 0001: separar o worker de monitoramento da aplicação web
 
-Status: aceita; processo separado e heartbeat implementados em M0, scheduler previsto para M2. Data: 2026-10-02.
+Status: aceita e implementada. Decisão inicial: 2 de outubro de 2026. Processo e heartbeat entraram na fundação; scheduler, reservas, coleta e retenção foram concluídos na entrega de monitoramento.
 
 ## Contexto
 
 As verificações devem acontecer a cada 1, 5 ou 15 minutos, mesmo sem visitas ao painel. Requisições web têm duração limitada e instâncias podem escalar ou desaparecer. Agendar um loop no processo web pode gerar checks duplicados e interromper coleta silenciosamente.
 
-O cron do plano Hobby da Vercel não oferece frequência menor que um dia: [limites oficiais](https://vercel.com/docs/cron-jobs/usage-and-pricing).
+A frequência necessária é de 1, 5 ou 15 minutos. O desenho precisa funcionar independentemente das visitas e das limitações de duração ou agendamento de uma hospedagem web.
 
 ## Decisão
 

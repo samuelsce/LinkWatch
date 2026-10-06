@@ -1,10 +1,10 @@
-# Arquitetura proposta
+# Arquitetura do LinkWatch
 
-Estado: M0 a M3 implementados. Worker, histórico, gráficos, incidentes, retenção e publicação estão disponíveis. OAuth real depende de configuração e smoke manual. Deploy, restore e teste de carga ainda são planejamento.
+Web, worker, histórico, gráficos, incidentes, retenção e publicação estão implementados. Este documento descreve a arquitetura atual e distingue as decisões de hospedagem ainda pendentes. Para localizar evidências no código, consulte o [guia de avaliação](AVALIACAO.md).
 
 ## Estrutura
 
-Um repositório TypeScript, com aplicação Next.js e um entrypoint Node para o worker. Compartilhar regras de domínio e acesso ao banco; não executar o loop de monitoramento dentro de uma requisição ou importar código de UI no worker. Não adicionar uma API Express ou Redis antes de uma necessidade concreta.
+Um repositório TypeScript reúne a aplicação Next.js e um entrypoint Node para o worker. Os processos compartilham regras de domínio e acesso ao PostgreSQL. O loop de monitoramento não depende de uma requisição web nem importa componentes de interface. Não há API Express, Redis ou broker de mensagens nesta versão.
 
 ```mermaid
 flowchart LR
@@ -14,20 +14,24 @@ flowchart LR
   S --> DB
   K[Worker Node: agenda e checks] --> DB
   K --> H[HTTP/HTTPS público]
-  K -. etapa M5: outbox .-> N[Discord / e-mail]
 ```
 
-Estrutura alvo:
+Alertas por Discord/e-mail e uma outbox transacional permanecem no [backlog](BACKLOG.md), fora do fluxo implementado acima.
+
+Estrutura atual:
 
 ```text
 src/
   app/                  rotas, páginas e handlers Next.js
   components/           componentes de interface
-  features/             monitores, métricas, incidentes e status
+  features/             serviços de monitores, histórico e páginas de status
+  db/                   configuração do cliente PostgreSQL/Prisma
   server/               autenticação e acesso privado ao banco
   domain/               regras puras e tipos compartilhados
-  monitoring/           URL safety, probe e persistência de resultados
-  worker/               scheduler, entrypoint e health
+  monitoring/           probe, scheduler, conclusão e retenção
+  worker/               runtime, loop, entrypoint e heartbeat
+  config/               configuração do tema
+  assets/               fonte local da marca e licença
 prisma/                 schema e migrações versionadas
 tests/                  integração, fixtures HTTP e E2E
 docs/                   decisões e especificações
@@ -35,23 +39,25 @@ docs/                   decisões e especificações
 
 ## Fluxo de monitoramento
 
-1. A criação do monitor grava nextCheckAt = agora e revisão 1.
-2. A cada cinco segundos, o worker reserva apenas tantos monitores vencidos quanto seus slots livres. Usar transação PostgreSQL e `FOR UPDATE SKIP LOCKED`.
-3. A reserva cria um CheckRun com scheduledAt, revision, token de lease e vencimento. A combinação monitorId/scheduledAt é única. A lease deve exceder o timeout + margem de persistência.
-4. Resolver DNS, validar todos os endereços e fixar o IP permitido no cliente HTTP. Preservar hostname para Host/SNI e validação do certificado.
-5. Realizar GET limitado pelo timeout. Não seguir redirects; cancelar/descartar corpo após headers. Classificar resultado sem salvar conteúdo da resposta.
-6. Na transação de conclusão, exigir token de lease, validade, configuração vigente e monitor ativo. Persistir o resultado, atualizar estado e incidente. Um worker atrasado não pode publicar após perder a reserva.
-7. Agendar o próximo check a partir da conclusão + intervalo. Não criar backlog retroativo. Publicar atraso/lacunas de agenda como métricas do coletor.
+Uma reserva, ou lease, concede a um worker um prazo para concluir um ciclo. O token identifica a reserva vigente; a revisão identifica a configuração usada na coleta. Conferir ambos na conclusão impede que um processo atrasado sobrescreva uma configuração mais recente.
 
-Lease expirada: outro worker pode reservar novamente o mesmo CheckRun com um novo token. A chamada HTTP pode se repetir após um crash; a persistência deve ser única. Não prometer exatamente uma chamada externa.
+1. A criação do monitor grava nextCheckAt = agora e revisão 1.
+2. A cada cinco segundos, o worker reserva apenas tantos monitores vencidos quanto seus slots livres, usando transação PostgreSQL e `FOR UPDATE SKIP LOCKED`.
+3. A reserva cria um CheckRun com scheduledAt, revision, token de lease e vencimento. A combinação monitorId/scheduledAt é única. A lease dura o timeout configurado mais 30 segundos de margem.
+4. O probe resolve DNS, valida todos os endereços e fixa o IP permitido no cliente HTTP. O hostname é preservado para Host/SNI e validação do certificado.
+5. Executa GET limitado pelo timeout, sem seguir redirects, e descarta o corpo após headers. O resultado é classificado sem salvar conteúdo da resposta.
+6. A transação de conclusão exige token de lease, validade, configuração vigente e monitor ativo. Persiste o resultado e atualiza estado e incidente. Um worker atrasado não pode publicar após perder a reserva.
+7. A próxima coleta é agendada a partir da conclusão + intervalo, sem verificações retroativas fictícias. O histórico informa lacunas e coletas iniciadas com mais de 30 segundos de atraso.
+
+Lease expirada: outro worker pode reservar novamente o mesmo CheckRun com um novo token. A chamada HTTP pode se repetir após um crash; a transação aceita uma única conclusão para o ciclo. Isso não garante exatamente uma chamada externa.
 
 Pausa ou alteração de URL invalida a lease e incrementa a revisão sob lock do monitor. Todos os caminhos de finalização, pausa e edição usam a mesma ordem de locks (monitor, CheckRun) para reduzir deadlocks. Excluir o monitor faz cascade dos dados e impede uma finalização tardia.
 
-Erro interno do coletor grava resultado operacional, sem contaminar disponibilidade do endpoint. Backoff limitado evita loop de erros; a UI mostra perda de coleta quando o limiar de frescor é ultrapassado.
+Erro interno do coletor grava resultado operacional, sem contaminar disponibilidade do endpoint. A próxima observação mantém o intervalo configurado; o loop do scheduler espera cinco segundos entre passagens. A UI mostra perda de coleta quando o limiar de frescor é ultrapassado.
 
 ## Autenticação e isolamento
 
-Implementação M1: Auth.js v5 beta fixado, GitHub OAuth, adapter Prisma e sessões de banco. O adapter foi testado com o schema atual. Layout, páginas e actions exigem sessão; serviços verificam ownerId derivado dela. Criar usa lock do proprietário para impor limites; editar/pausar/excluir usam lock do monitor e updatedAt para detectar conflito. Cache da sessão é limitado à requisição. Consultas de usuário não são cacheadas globalmente.
+Auth.js v5 beta fixado, GitHub OAuth, adapter Prisma e sessões de banco. O adapter foi testado com o schema atual. Layout, páginas e actions exigem sessão; serviços verificam ownerId derivado dela. Criar usa lock do proprietário para impor limites; editar/pausar/excluir usam lock do monitor e updatedAt para detectar conflito. Cache da sessão é limitado à requisição. Consultas de usuário não são cacheadas globalmente. O retorno OAuth real continua pendente de configuração e validação manual.
 
 Status público usa consulta/projeção própria com allowlist de campos, sem serializar modelos completos. readPublicPage usa snapshot RepeatableRead para consultar publicação, seleção e amostras de forma consistente; retorna somente textos públicos, estados, disponibilidade/amostras, horários e incidentes sem códigos técnicos. Rotas são dinâmicas, sem cache global de publicação. Despublicação/renomeação levam a 404 nas requisições seguintes. Dados já recebidos por um visitante não podem ser retirados do navegador.
 
@@ -75,11 +81,11 @@ Métricas são calculadas no servidor com filtros UTC, contagem de resultados de
 
 ## Operação e deploy
 
-Desenvolvimento: web + worker + PostgreSQL; Docker Compose para o banco se Docker estiver disponível, ou um PostgreSQL acessível por DATABASE_URL. Atualmente Node e Git estão instalados; Docker e GitHub CLI não foram encontrados no PATH.
+Desenvolvimento: web + worker + PostgreSQL; Docker Compose é uma opção para o banco, assim como um PostgreSQL acessível por DATABASE_URL. Os comandos e requisitos estão em [DESENVOLVIMENTO.md](DESENVOLVIMENTO.md), sem depender das ferramentas instaladas na máquina do autor.
 
 Produção proposta: web, worker sempre ativo e PostgreSQL, todos na mesma região. Pode ser um host de containers/VPS ou web serverless com worker separado. Selecionar provedor após verificar custos, suspensão por inatividade, backups e egress.
 
-O cron do plano Hobby da Vercel executa no máximo diariamente, portanto não atende a checks de minuto. Essa limitação motiva o worker dedicado: [Vercel Cron usage and pricing](https://vercel.com/docs/cron-jobs/usage-and-pricing).
+A hospedagem precisa permitir a frequência de coleta de 1/5/15 minutos e a execução contínua do worker. A decisão de separá-lo da web está na [ADR 0001](adr/0001-separate-monitoring-worker.md); não foi escolhido um provedor nesta versão.
 
 - Migrações executadas uma vez por release antes de iniciar serviços compatíveis.
 - Liveness do processo e readiness da conexão ao banco separados.
@@ -89,6 +95,12 @@ O cron do plano Hobby da Vercel executa no máximo diariamente, portanto não at
 - Logs estruturados com monitorId/runId e erro sanitizado; segredos ficam fora do repositório.
 - Publicar somente após testar restore de backup, smoke test e ausência de vazamentos na página pública.
 
-## Bibliotecas
+## Tradeoffs e próximos passos
 
-Next.js App Router + TypeScript conforme [guia oficial](https://nextjs.org/docs/app/getting-started/installation). Para Prisma atual, confirmar `prisma.config.ts` e adapter PostgreSQL conforme [documentação do connector](https://docs.prisma.io/docs/orm/v6/overview/databases/postgresql). Versões, schema concreto e lockfile pertencem à etapa de scaffold; estas referências não substituem validação da integração.
+- PostgreSQL coordena reservas e persistência, reduzindo o número de serviços. A disputa por locks, o custo das consultas e a retenção precisam ser medidos sob carga.
+- O dashboard atualiza ao recarregar. Não há assinatura de eventos, streaming ou polling automático.
+- O worker usa TypeScript via `tsx` e exige ferramentas de desenvolvimento no pacote atual. O empacotamento de produção ainda precisa ser definido.
+- Limite por conta e cinco slots por processo não substituem rate limiting ou um teto global de capacidade.
+- A meta de 100 monitores, backups/restore e OAuth real não foram comprovados pelos testes locais.
+
+Versões exatas e comandos estão em [package.json](../package.json). As restrições de domínio estão no [modelo de dados](DATABASE.md); as verificações e pendências de implantação, em [TESTING.md](TESTING.md) e [SECURITY.md](SECURITY.md).

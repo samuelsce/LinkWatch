@@ -1,90 +1,73 @@
-# Estratégia de testes e release
+# Testes e critérios de release
 
-M3 inclui 102 testes unitários, 44 de integração PostgreSQL/rede e 10 jornadas de navegador, além de smoke de web/worker. Executar `npm test`, `npm run test:integration`, `npm run test:e2e` e `npm run test:smoke` conforme o README. CI está em `.github/workflows/ci.yml`. Sessões E2E usam o banco normal, sem bypass no app. OAuth real requer smoke manual após configuração. Capacidade, restore e deploy continuam planejados para M4.
+A validação do LinkWatch combina regras puras, PostgreSQL real, rede isolada, navegador e processos. O objetivo é verificar o comportamento relevante de cada camada, incluindo concorrência, isolamento e recuperação de falhas.
 
-## Evidências de M3
+A suíte atual contém **102 testes unitários, 44 de integração e 18 jornadas de navegador**, além de smoke dos processos. A [execução da revisão visual](https://github.com/samuelsce/LinkWatch/actions/runs/37405090355) aprovou essas verificações. Os comandos reproduzíveis estão no [guia de desenvolvimento](DESENVOLVIMENTO.md).
 
-- Buckets UTC em três janelas: somas consistentes, média null em falhas/intervalos vazios, p95 calculado das amostras do período.
-- Estados públicos: unknown/stale/paused, resumo vazio/pausados sem falsa disponibilidade e degradação por serviço.
-- Publicação: padrão despublicado, seleção explícita, propriedade, conflito de versão, disputa de slug, renomeação e despublicação.
-- Projeção pública sem IDs, URLs, query strings, identidade, nome privado e erros técnicos. E2E também verifica o HTML recebido pelo visitante.
-- Processo worker em tests/fixtures/worker-harness.ts executa o mesmo runtime/loop da aplicação contra um servidor HTTP isolado. O teste acelera a espera e mapeia o transporte por código de fixture, sem variável de produção que libere destinos locais. TEST_DATABASE_URL é obrigatório e independente de DATABASE_URL.
-- Navegador acompanha online → instável → offline → recuperado e confirma os estados públicos sem sessão. Troca de slug e despublicação retornam HTTP 404; formulário adulterado não publica monitor estrangeiro.
-- Gráfico navegável por teclado, tabela alternativa, filtros de período e telas mobile de 360 px. Screenshots locais são artefatos de teste, não uma demo de produção.
-- Correção de tooling após auditoria: adaptador tinyglobby limitado ao helper de diretórios do plugin Next, preservando os presets. Quatro testes exercitam a API real do helper; instalação limpa e auditoria completa devem passar. Reavaliar o override em upgrades do Next.
+## Cobertura por camada
 
-## Evidências de M2
+| Camada | Evidência | Arquivos para inspecionar |
+| --- | --- | --- |
+| Domínio | Falhas consecutivas, recuperação, revisão, estado sem dados e entrada validada | [Transições](../tests/unit/check-transition.test.ts), [entrada](../tests/unit/monitor-input.test.ts), [estados públicos](../tests/unit/status-pages.test.ts) |
+| Rede | DNS misto bloqueado, IP fixado, Host preservado, timeout, TLS inválido, redirect sem seguir destino e descarte do corpo | [Probe unitário](../tests/unit/probe.test.ts), [servidores HTTP/TLS isolados](../tests/integration/probe-http.test.ts) |
+| Autenticação e dados | Adapter, sessões, propriedade, limites por conta e conflitos de edição | [Adapter](../tests/integration/auth-adapter.test.ts), [serviço](../tests/integration/monitor-service.test.ts), [restrições do banco](../tests/integration/database.test.ts) |
+| Coleta | Disputa de reserva, troca de token, revisão antiga, conclusão duplicada, rollback, incidentes e cinco slots | [Scheduler](../tests/integration/scheduler.test.ts), [runtime](../tests/integration/worker-cycle.test.ts) |
+| Métricas e retenção | p95 nearest-rank, ausência de amostras, filtros UTC, lacunas e limpeza concorrente | [Histórico e retenção](../tests/integration/scheduler.test.ts) |
+| Publicação | Propriedade, seleção, projeção pública, slug único, despublicação e endereço antigo inválido | [Banco](../tests/integration/status-pages.test.ts), [navegador](../tests/e2e/monitors.spec.ts) |
+| Interface | Teclado, foco, telas estreitas, favicons, movimento reduzido, temas e armazenamento bloqueado | [Apresentação](../tests/e2e/presentation.spec.ts) |
+| Segurança no navegador | Origem externa de Server Action, HTML malicioso armazenado, cabeçalhos e iframe bloqueado | [Jornadas de monitores](../tests/e2e/monitors.spec.ts), [cabeçalhos e iframe](../tests/e2e/security.spec.ts) |
+| Processos | Web de produção, readiness PostgreSQL e heartbeat de worker separado | [Smoke](../scripts/smoke.mjs) |
+| Tooling | Compatibilidade do helper Next com diretórios padrão, literais, padrões e listas | [Adaptador de glob](../tests/unit/next-root-glob.test.ts) |
 
-- Servidor HTTP isolado: headers sem corpo finalizado, timeout, Host preservado e redirect sem seguir destino; HTTPS com certificado autoassinado é rejeitado.
-- DNS misto é bloqueado; o transporte recebe somente o IP validado. Resolver/transport de fixtures são injetados somente pelo código dos testes, sem flag de produção para permitir localhost.
-- Dois schedulers competem pelo mesmo ciclo; lease expirada troca token sem trocar runId; conclusão antiga, duplicada, após expiração, pausa, edição ou exclusão é rejeitada.
-- Ciclo HTTP real pelo WorkerRuntime: online → instável → offline → recuperado, com um incidente. Teste adicional verifica cinco slots e a sexta tarefa sem reserva antecipada.
-- Falha de persistência reverte a transação inteira. Coleta preserva updatedAt da configuração para não invalidar formulário apenas pela atividade do worker.
-- Disponibilidade vazia é null; p95 de 1 a 20 é 19; janelas UTC e lacunas são verificadas; dois cleaners não duplicam remoção, preservando execuções ativas e incidentes.
-- Browser mostra métricas/recuperação e filtros no mobile a partir de registros de fixture. Não confundir essa jornada com a autorização GitHub real ou com E2E orquestrando worker.
+## Jornadas no navegador
 
-## Regras de domínio: testes unitários
+As jornadas executam o build de produção e incluem:
 
-- Primeira falha deixa instável; segunda abre incidente com início na primeira falha.
-- Falha isolada seguida de sucesso não cria incidente.
-- Sucesso resolve apenas um incidente aberto; falhas seguintes não duplicam incidente.
-- Pausa, retomada e mudança de URL obedecem às regras de revisão e encerramento.
-- Disponibilidade: zero amostras, todas falhas, mistura, falha isolada, erro do coletor e janela temporal.
-- p95 nearest-rank com amostras pequenas, repetidas e limites do período.
-- Estado sem dados recentes e resumo público com monitores pausados/desconhecidos.
+- Visitante anônimo e sessão expirada bloqueados em rotas privadas.
+- Cadastro inválido, cadastro válido, edição, pausa, retomada e exclusão.
+- Segunda conta sem acesso ou permissão de alteração nos monitores da primeira.
+- Logout com exclusão de sessão e rejeição do cookie antigo.
+- POST de Server Action com origem externa sem alteração no banco.
+- Publicação por formulário real, seleção estrangeira rejeitada, slug alterado e despublicação.
+- Ciclo de queda e recuperação com processo worker, servidor HTTP isolado e visitante sem sessão.
+- Texto contendo `script`, `img onerror` e `svg onload` armazenado e exibido como texto inativo.
+- Temas do dispositivo, escolha persistida, sincronização entre abas, armazenamento bloqueado e inicialização antes do React.
+- Cabeçalhos em páginas, autenticação, saúde, favicon, 404 e redirecionamento privado; iframe recusado pelo navegador.
 
-## URL safety: unitários e integração HTTP isolada
+O teste de iframe usa um servidor local real em outra origem. Assim, o bloqueio da CSP é exercitado sem ser substituído pelo bloqueio de acesso à rede local aplicado a páginas interceptadas pelo navegador.
 
-Testar localhost, IPv4/IPv6 privados, endereços mapeados, formatos alternativos, DNS público/privado misto, metadados, credenciais, portas e protocolos proibidos. Simular DNS rebinding e confirmar que a conexão usa o IP validado. Testar redirects sem seguir destino, timeout, erro TLS e descarte do corpo.
+## Isolamento dos testes
 
-Usar um resolver/transport injetável para fixtures. Qualquer permissão de host local é exclusiva do harness de testes, sem variável de produção capaz de desabilitar todas as proteções.
+Integração, E2E e smoke exigem `TEST_DATABASE_URL` apontando para um banco descartável separado do banco da aplicação. O script de integração gera o cliente, aplica as migrations nesse banco e executa os testes. Nunca usar uma URL de desenvolvimento ou produção como substituto.
 
-## PostgreSQL: integração real
+Sessões de navegador são registros normais no banco de teste. A aplicação não tem provider de entrada especial ou rota para assumir uma identidade de teste. A navegação de autorização GitHub é interceptada; o callback completo com credenciais reais ainda exige validação manual.
 
-- Dois workers disputam o mesmo monitor: um resultado persistido por ciclo e um incidente aberto.
-- Crash antes/depois da requisição e antes/depois do commit; recuperação de lease e rejeição do token antigo.
-- Worker antigo finaliza após pausa, edição ou exclusão: não altera o estado atual.
-- Duas falhas concluídas: check e incidente consistentes na mesma transação.
-- Criações simultâneas não ultrapassam limite de monitores por usuário.
-- Publicação rejeita monitor de outro proprietário e campos privados não aparecem na resposta.
-- Retenção remove apenas resultados expirados e preserva incidentes/execuções ativas.
-- Todas as migrations aplicam em banco vazio; testar restore antes do deploy.
+Resolvers e transportes locais são injetados apenas nos fixtures. Não existe variável de produção para liberar localhost ou desabilitar a validação TLS. Os testes de coleta não dependem da estabilidade de sites de terceiros.
 
-Usar banco descartável separado do ambiente de desenvolvimento/produção. Não executar limpeza de dados contra DATABASE_URL de produção.
+Chromium é usado no CI com PostgreSQL 17. Localmente, as jornadas foram executadas via Edge no Windows. Isso não equivale a testes em todos os navegadores ou dispositivos físicos. Capturas de E2E são artefatos ignorados pelo Git; as imagens selecionadas para o portfólio têm [proveniência própria](screenshots/README.md).
 
-## E2E: jornadas críticas
+## CI
 
-1. Usuário autenticado cria monitor, aguarda check real do fixture e consulta histórico.
-2. Fixture falha duas vezes e recupera; incidente aparece e fecha.
-3. Usuário pausa/retoma e edita URL; estado respeita as regras.
-4. Usuário publica seleção; visitante vê apenas informações permitidas; despublicação retorna 404.
-5. Segundo usuário recebe 404/negação em dados privados do primeiro, incluindo mutations.
-6. Fluxo vazio e formulário inválido funcionam em mobile e teclado.
+O [workflow](../.github/workflows/ci.yml) executa, nesta ordem:
 
-Fixtures de sessão são exclusivas de testes e não podem ser ativadas no build de produção. Smoke test do GitHub OAuth real no ambiente de staging, sem usar conta pessoal em CI.
+1. Instalação reproduzível pelo lockfile e validação do schema.
+2. Lint, tipos e testes unitários.
+3. Integração PostgreSQL e aplicação das migrations.
+4. Build de produção sem credenciais do banco.
+5. Instalação do Chromium e jornadas de navegador.
+6. Smoke de web/worker e auditoria de dependências.
 
-## CI e critérios de release
+Actions são fixadas por commit, com permissão `contents: read` e sem persistir credenciais do checkout. Overrides e adaptações de tooling são documentados no [guia de desenvolvimento](DESENVOLVIMENTO.md#dependências-e-fluxo-de-trabalho).
 
-No scaffold, adicionar lint, typecheck, testes unitários e build. Integração usa serviço PostgreSQL; E2E roda após web e worker estarem disponíveis. Secret scanning e dependency review conforme recursos do repositório, sem badges fictícios.
+## O que ainda precisa ser validado
 
-Release exige todos os checks aplicáveis passando, migrações testadas, smoke test no deploy, worker com heartbeat recente, coleta real, página pública sanitizada e README validado de checkout limpo.
+- OAuth completo em ambiente configurado.
+- HTTPS, cookies, host/proxy e cabeçalhos no domínio público.
+- Rate limiting, teto global de monitores e capacidade real do worker.
+- Atraso de agendamento, memória e crescimento do banco sob carga.
+- Backup e restauração, empacotamento do worker e smoke do deploy.
+- Desempenho em dispositivos e redes reais; não foram publicados resultados de Core Web Vitals em produção.
 
-Teste de capacidade: 100 monitores, concorrência 5, endpoints com latência normal e timeouts. Medir p95 do atraso da agenda, memória e crescimento do banco. Ajustar limite do demo ao resultado; não presumir que timeout de todos os monitores cabe na meta.
+A meta inicial de carga é 100 monitores, concorrência de cinco e p95 de início de coleta até 30 segundos após o vencimento. São metas de projeto, não resultados obtidos. Verificar endpoints rápidos e cenários de timeout antes de definir a capacidade da demonstração.
 
-## Revisão visual de outubro de 2026
-
-A suíte de apresentação verifica navegação da página inicial pelo teclado, foco visível, preferência por movimento reduzido, carregamento dos favicons SVG/ICO e ausência de overflow em 360/768 px na apresentação e login. Capturas são salvas em `test-results/`, ignorado pelo Git, para inspeção visual. As jornadas de monitoramento continuam cobrindo detalhe e status público com dados reais de um worker de testes.
-
-Esta revisão passou 102 testes unitários, 44 de integração PostgreSQL e 12 jornadas de navegador, além de lint, tipos, build de produção e smoke dos processos. As medições de desempenho em hospedagem e o login OAuth real continuam pendentes da configuração do ambiente; não são inferidos desses resultados.
-
-## Validação dos temas
-
-A suíte de apresentação também cobre tema do dispositivo, escolha manual persistida após recarregar, navegação entre rotas, sincronização entre abas e armazenamento bloqueado. Uma jornada impede o carregamento dos arquivos JavaScript do React para comprovar que o tema salvo é aplicado pelo script inicial. O console é observado durante a navegação normal para detectar avisos de hidratação.
-
-Formulário privado em 360 px, histórico e página pública são capturados no tema escuro. A suíte atual possui 102 testes unitários, 44 de integração e 15 jornadas de navegador. Esses testes usam somente o banco descartável indicado por `TEST_DATABASE_URL`.
-
-## Revisão de segurança
-
-As três jornadas adicionais verificam cabeçalhos em páginas, endpoints de saúde, favicon e 404; bloqueio de iframe pelo navegador em outra origem; e HTML malicioso armazenado nos campos privados/publicados, incluindo `script`, `img onerror` e `svg onload`. A origem que hospeda o iframe de teste também usa loopback, para evitar que o bloqueio de acesso à rede local do navegador substitua a verificação da CSP.
-
-A suíte passa a ter 102 testes unitários, 44 de integração e 18 jornadas de navegador. Isolamento entre contas, origem externa de Server Actions, logout, privacidade e política de rede continuam cobertos pelas jornadas existentes. Resultados e limitações estão na [revisão de segurança](SECURITY.md); esses testes não substituem validação do deploy nem testes de carga.
+Release público exige os checks aplicáveis aprovados, migrations testadas, smoke do deploy, worker saudável, coleta real, privacidade da página pública, restauração validada e instruções de um checkout limpo. Veja também [SECURITY.md](SECURITY.md) e [BACKLOG.md](BACKLOG.md).
