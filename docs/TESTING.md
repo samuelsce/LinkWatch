@@ -1,6 +1,16 @@
 # Estratégia de testes e release
 
-M2 inclui 78 testes unitários, 38 de integração PostgreSQL/rede e 8 jornadas de navegador, além de smoke de web/worker. Executar `npm test`, `npm run test:integration`, `npm run test:e2e` e `npm run test:smoke` conforme o README. CI está em `.github/workflows/ci.yml`. Sessões E2E usam o banco normal, sem bypass no app. OAuth real requer smoke manual após configuração. Publicação, E2E com worker+navegador, capacidade e restore abaixo continuam planejados para M3–M4.
+M3 inclui 98 testes unitários, 44 de integração PostgreSQL/rede e 10 jornadas de navegador, além de smoke de web/worker. Executar `npm test`, `npm run test:integration`, `npm run test:e2e` e `npm run test:smoke` conforme o README. CI está em `.github/workflows/ci.yml`. Sessões E2E usam o banco normal, sem bypass no app. OAuth real requer smoke manual após configuração. Capacidade, restore e deploy continuam planejados para M4.
+
+## Evidências de M3
+
+- Buckets UTC em três janelas: somas consistentes, média null em falhas/intervalos vazios, p95 calculado das amostras do período.
+- Estados públicos: unknown/stale/paused, resumo vazio/pausados sem falsa disponibilidade e degradação por serviço.
+- Publicação: padrão despublicado, seleção explícita, propriedade, conflito de versão, disputa de slug, renomeação e despublicação.
+- Projeção pública sem IDs, URLs, query strings, identidade, nome privado e erros técnicos. E2E também verifica o HTML recebido pelo visitante.
+- Processo worker em tests/fixtures/worker-harness.ts executa o mesmo runtime/loop da aplicação contra um servidor HTTP isolado. O teste acelera a espera e mapeia o transporte por código de fixture, sem variável de produção que libere destinos locais. TEST_DATABASE_URL é obrigatório e independente de DATABASE_URL.
+- Navegador acompanha online → instável → offline → recuperado e confirma os estados públicos sem sessão. Troca de slug e despublicação retornam HTTP 404; formulário adulterado não publica monitor estrangeiro.
+- Gráfico navegável por teclado, tabela alternativa, filtros de período e telas mobile de 360 px. Screenshots locais são artefatos de teste, não uma demo de produção.
 
 ## Evidências de M2
 

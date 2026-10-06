@@ -1,6 +1,6 @@
 # Modelo de dados
 
-O modelo do MVP está implementado em `prisma/schema.prisma`, com três migrations: tabelas iniciais, restrições PostgreSQL e exclusividade de ciclo ativo. IDs UUID; horários timestamptz em UTC. Todas foram aplicadas em banco vazio. Autenticação e monitoramento estão integrados; publicação e alertas seguem para as próximas entregas.
+O modelo do MVP está implementado em `prisma/schema.prisma`, com três migrations: tabelas iniciais, restrições PostgreSQL e exclusividade de ciclo ativo. IDs UUID; horários timestamptz em UTC. Todas foram aplicadas em banco vazio. Autenticação, monitoramento e publicação estão integrados. M3 utiliza as tabelas StatusPage/StatusPageMonitor já existentes, sem nova migration; alertas seguem para uma entrega posterior.
 
 ```mermaid
 erDiagram

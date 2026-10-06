@@ -37,6 +37,8 @@ Status M1: implementação de LW-04/LW-05 disponível, com sessões, CRUD, limit
 
 Status M2: LW-06–LW-09 implementadas: probe HTTP/TLS seguro, leases e fencing, incidentes transacionais, métricas UTC e retenção em lotes. Histórico básico foi conectado ao detalhe para conferir os resultados; gráficos, publicação e E2E com worker + navegador permanecem LW-10–LW-12. Testes não comprovam ainda a meta de capacidade/atraso de 100 monitores.
 
+Status M3: LW-10–LW-12 implementadas: resumo privado, gráfico interativo com lacunas, configuração/publicação, DTO público restrito e jornada E2E com processo worker, fixture HTTP e visitante anônimo. Próximas: LW-13/LW-14 (deploy, backup/restore, capacidade e evidências de portfólio). OAuth real ainda precisa de credenciais e smoke manual. Os IDs continuam sendo planejamento, não issues remotas.
+
 Começar por LW-01 a LW-03. Depois acesso/cadastro; em seguida um ciclo vertical com probe + scheduler + incidente. Só então gráficos, publicação e deploy. Alertas dependem de incidentes confiáveis.
 
 ## Corpo sugerido das issues

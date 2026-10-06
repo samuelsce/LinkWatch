@@ -1,6 +1,6 @@
 # LinkWatch — requisitos do produto
 
-Estado: M0–M2 implementados. Worker coleta HTTP seguro, persiste histórico e incidentes; detalhe mostra métricas e amostras reais. Login GitHub requer configurar OAuth App e executar o smoke real. Gráficos e status público continuam previstos para M3; capacidade e deploy ainda precisam de validação.
+Estado: M0–M3 implementados. Worker, histórico, incidentes, gráficos acessíveis e publicação de serviços selecionados estão disponíveis. Jornada E2E acompanha queda/recuperação com worker e visitante sem sessão. Login GitHub requer configurar OAuth App e executar o smoke real; capacidade e deploy ainda precisam de validação.
 
 ## Objetivo
 

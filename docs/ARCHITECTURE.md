@@ -1,6 +1,6 @@
 # Arquitetura proposta
 
-Estado: M0–M2 implementados. Worker, probe seguro, scheduler com leases, histórico, incidentes e retenção estão disponíveis. OAuth real depende de configuração e smoke manual. Gráficos, publicação, deploy e teste de carga ainda são planejamento.
+Estado: M0–M3 implementados. Worker, histórico, gráficos, incidentes, retenção e publicação estão disponíveis. OAuth real depende de configuração e smoke manual. Deploy, restore e teste de carga ainda são planejamento.
 
 ## Estrutura
 
@@ -53,7 +53,9 @@ Erro interno do coletor grava resultado operacional, sem contaminar disponibilid
 
 Implementação M1: Auth.js v5 beta fixado, GitHub OAuth, adapter Prisma e sessões de banco. O adapter foi testado com o schema atual. Layout, páginas e actions exigem sessão; serviços verificam ownerId derivado dela. Criar usa lock do proprietário para impor limites; editar/pausar/excluir usam lock do monitor e updatedAt para detectar conflito. Cache da sessão é limitado à requisição. Consultas de usuário não são cacheadas globalmente.
 
-Status público usa uma consulta/projeção própria com allowlist de campos. Não serializar modelos completos. Mutations validam entrada, propriedade, origem/CSRF conforme o mecanismo escolhido e limites por usuário.
+Status público usa consulta/projeção própria com allowlist de campos, sem serializar modelos completos. readPublicPage usa snapshot RepeatableRead para consultar publicação, seleção e amostras de forma consistente; retorna somente textos públicos, estados, disponibilidade/amostras, horários e incidentes sem códigos técnicos. Rotas são dinâmicas, sem cache global de publicação. Despublicação/renomeação levam a 404 nas requisições seguintes. Dados já recebidos por um visitante não podem ser retirados do navegador.
+
+Salvar publicação exige sessão, lock do proprietário, locks dos monitores próprios em ordem de ID e versão updatedAt. A seleção é substituída na mesma transação; associações estrangeiras são rejeitadas pela aplicação e FKs. As Server Actions mantêm o Origin/Host check do Next.js. Slug é único no banco; disputa retorna mensagem útil, sem revelar o proprietário atual.
 
 ## Requisições externas
 
@@ -69,7 +71,7 @@ Limpeza diária em até dez lotes de mil checks concluídos há mais de 30 dias;
 
 100 monitores a cada minuto geram aproximadamente 4,32 milhões de checks em 30 dias. Isso é um teto de projeto para validação, não uma promessa de operação gratuita. Começar a demo com poucos monitores e intervalo padrão de cinco minutos.
 
-Métricas são calculadas no servidor com filtros UTC, contagem de resultados de endpoint, média e percentile_disc(0.95) para nearest-rank. Lacunas usam observações da revisão atual; atrasos de início maiores que 30 s e resultados operacionais são informados separadamente. M3 agregará gráficos em buckets (5 minutos em 24 h, 1 hora em 7 d, 6 horas em 30 d), informando média, amostras e falhas. Não calcular p95 pela média de percentis de buckets.
+Métricas são calculadas no servidor com filtros UTC, contagem de resultados de endpoint, média e percentile_disc(0.95) para nearest-rank. Lacunas usam observações da revisão atual; atrasos de início maiores que 30 s e resultados operacionais são informados separadamente. Gráficos agregam buckets (5 minutos em 24 h, 1 hora em 7 d, 6 horas em 30 d), informando média, amostras e falhas. Buckets vazios são preenchidos com contagens zero e média null; isso interrompe a linha. P95 do período continua calculado das amostras originais, não de percentis/médias de buckets.
 
 ## Operação e deploy
 
